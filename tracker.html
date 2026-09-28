@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: a working desk. Header with live progress, sticky tab bar, then one column of day cards / question rows. */
+/* Layout: a working desk. Live progress header, sticky tab bar, one working column; casebook cards in a grid; PDF viewer as a full-screen sheet. */
 :root {
   --bg: #f4f6fb;
   --surface: #ffffff;
@@ -12,10 +12,13 @@
   --line: #dde2ee;
   --accent: #2a4bd7;
   --accent-soft: #e7ecff;
-  --mark: #ffd84d;
+  --mark: #f2b705;
   --mark-ink: #3d2f00;
   --good: #16784e;
   --good-soft: #def3e8;
+  --warn: #b4501b;
+  --warn-soft: #fbe9df;
+  --sheet: #e9ecf4;
   --f-display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
   --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -24,18 +27,18 @@
   :root:not([data-theme="light"]) {
     --bg: #0e1120; --surface: #161a2b; --ink: #e7eaf6; --muted: #9ba3c2; --line: #29304a;
     --accent: #93a6ff; --accent-soft: #222a50; --mark: #e2bb3b; --mark-ink: #1b1400;
-    --good: #62d39d; --good-soft: #15321f; color-scheme: dark;
+    --good: #62d39d; --good-soft: #15321f; --warn: #f0a070; --warn-soft: #3a2418; --sheet: #0a0c17; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0e1120; --surface: #161a2b; --ink: #e7eaf6; --muted: #9ba3c2; --line: #29304a;
   --accent: #93a6ff; --accent-soft: #222a50; --mark: #e2bb3b; --mark-ink: #1b1400;
-  --good: #62d39d; --good-soft: #15321f; color-scheme: dark;
+  --good: #62d39d; --good-soft: #15321f; --warn: #f0a070; --warn-soft: #3a2418; --sheet: #0a0c17; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55; }
-.wrap { max-width: 1040px; margin: 0 auto; padding-inline: 16px; }
-h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px; }
+h1, h2, h3, h4 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.2; }
 a { color: var(--accent); }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -43,29 +46,30 @@ button { font: inherit; color: inherit; }
 header.top { padding-block: 28px 18px; }
 .eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 header.top h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 700; margin-top: 6px; }
-header.top p.lede { color: var(--muted); max-width: 62ch; margin: 8px 0 0; }
-.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+header.top p.lede { color: var(--muted); max-width: 66ch; margin: 8px 0 0; }
+.stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
 .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
-.stat .k { font-size: 12px; color: var(--muted); font-family: var(--f-mono); letter-spacing: .04em; text-transform: uppercase; }
-.stat .v { font-family: var(--f-display); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.stat .v small { font-size: 14px; color: var(--muted); font-weight: 500; }
+.stat .k { font-size: 11px; color: var(--muted); font-family: var(--f-mono); letter-spacing: .04em; text-transform: uppercase; }
+.stat .v { font-family: var(--f-display); font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat .v small { font-size: 13px; color: var(--muted); font-weight: 500; }
+.stat .s { font-size: 12px; color: var(--muted); margin-top: 4px; }
 .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 6px; }
 .bar > i { display: block; height: 100%; background: var(--accent); border-radius: 3px; transition: width .3s; }
-.stat input[type=date] { font: inherit; font-size: 14px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; margin-top: 4px; max-width: 100%; }
+.stat input[type=date] { font: inherit; font-size: 13px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; margin-top: 4px; max-width: 100%; }
 .sync { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-top: 10px; }
 
 nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
-nav.tabs .wrap { display: flex; gap: 4px; overflow-x: auto; }
-nav.tabs button { background: none; border: 0; padding: 12px 14px; cursor: pointer; font-family: var(--f-display); font-weight: 600; font-size: 15px; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; }
+nav.tabs .wrap { display: flex; gap: 2px; overflow-x: auto; }
+nav.tabs button { background: none; border: 0; padding: 12px 12px; cursor: pointer; font-family: var(--f-display); font-weight: 600; font-size: 15px; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; }
 nav.tabs button[aria-selected=true] { color: var(--ink); border-bottom-color: var(--accent); }
 
 main { padding-block: 22px 60px; }
-.section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin-bottom: 14px; }
+.section-head { margin-bottom: 14px; }
 .section-head h2 { font-size: 24px; }
-.section-head p { color: var(--muted); margin: 4px 0 0; max-width: 70ch; }
+.section-head p { color: var(--muted); margin: 6px 0 0; max-width: 78ch; }
 .phase { margin-top: 26px; }
 .phase:first-child { margin-top: 0; }
-.phase > h3 { font-size: 13px; font-family: var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 500; margin-bottom: 10px; }
+.phase > h3, .kicker { font-size: 13px; font-family: var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 500; margin-bottom: 10px; }
 
 details.day { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 10px; }
 details.day.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
@@ -80,73 +84,107 @@ details.day.complete .daynum { background: var(--good-soft); color: var(--good);
 .pill.today { background: var(--accent); border-color: var(--accent); color: var(--surface); }
 .pill.done { background: var(--good-soft); border-color: transparent; color: var(--good); }
 .daybody { padding: 0 16px 16px; display: grid; gap: 14px; }
-.daybody .focus { color: var(--muted); margin: 0; max-width: 75ch; }
+.daybody .focus { color: var(--muted); margin: 0; max-width: 78ch; }
 .block h4 { font-family: var(--f-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 500; margin: 0 0 6px; }
 .tip { background: var(--accent-soft); border-radius: 8px; padding: 10px 12px; font-size: 14px; }
 
-.row { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 10px; align-items: start; padding: 8px 0; border-top: 1px solid var(--line); }
-.block .row:first-of-type { border-top: 0; }
-.check { appearance: none; width: 20px; height: 20px; border: 2px solid var(--muted); border-radius: 5px; margin: 2px 0 0; cursor: pointer; display: grid; place-items: center; background: var(--surface); }
+.row { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 10px; align-items: start; padding: 9px 0; border-top: 1px solid var(--line); }
+.block .row:first-of-type, .cat .row:first-of-type { border-top: 0; }
+.check { appearance: none; width: 20px; height: 20px; border: 2px solid var(--muted); border-radius: 5px; margin: 2px 0 0; cursor: pointer; display: grid; place-items: center; background: var(--surface); flex: none; }
 .check:checked { background: var(--good); border-color: var(--good); }
 .check:checked::after { content: ""; width: 5px; height: 10px; border: solid var(--surface); border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px); }
 .row .txt { min-width: 0; }
 .row.is-done .txt > .q { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--line); }
 .row .q { font-weight: 500; }
-.row .sub { font-size: 13px; color: var(--muted); }
-.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-.tag { font-family: var(--f-mono); font-size: 11px; padding: 1px 7px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); }
-.tag.lvl { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
-.actions { display: flex; gap: 6px; }
-.icon-btn { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; color: var(--muted); white-space: nowrap; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; align-items: center; }
+.tag { font-family: var(--f-mono); font-size: 11px; padding: 1px 7px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.tag.plain { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+.tag.rep { background: var(--good-soft); color: var(--good); }
+.tag.gd { background: var(--warn-soft); color: var(--warn); }
+.tag.co { background: var(--ink); color: var(--bg); }
+.srcl { font-size: 12px; color: var(--muted); }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.icon-btn { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; color: var(--muted); white-space: nowrap; text-decoration: none; display: inline-block; }
+.icon-btn:hover { color: var(--ink); }
 .icon-btn[aria-pressed=true] { background: var(--mark); border-color: var(--mark); color: var(--mark-ink); font-weight: 600; }
+.icon-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
 .more { margin-top: 8px; display: grid; gap: 8px; }
 .hint { font-size: 14px; background: var(--bg); border-left: 3px solid var(--accent); padding: 8px 10px; border-radius: 0 6px 6px 0; }
-textarea.note { width: 100%; min-height: 64px; font: inherit; font-size: 14px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 8px; resize: vertical; }
+textarea.note { width: 100%; min-height: 70px; font: inherit; font-size: 14px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 8px; resize: vertical; }
 
-.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
 .chip { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: 13px; }
 .chip[aria-pressed=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .chip .n { font-family: var(--f-mono); font-size: 11px; opacity: .7; margin-left: 4px; }
 input.search { font: inherit; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-width: 0; flex: 1 1 220px; }
-select.status { font: inherit; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+select.sel { font: inherit; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; max-width: 100%; }
 .cat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 6px; margin-bottom: 14px; }
-.cat > header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; align-items: baseline; margin-bottom: 4px; }
+.cat > header { margin-bottom: 4px; }
 .cat > header h3 { font-size: 19px; }
-.cat > header p { margin: 2px 0 0; color: var(--muted); font-size: 14px; max-width: 70ch; }
+.cat > header p { margin: 2px 0 0; color: var(--muted); font-size: 14px; max-width: 76ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 13px; color: var(--muted); margin-bottom: 14px; align-items: center; }
 
-.cgrid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
-.concept { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; min-width: 0; }
-.concept .top { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 10px; align-items: start; }
-.concept h4 { font-family: var(--f-display); font-size: 17px; margin: 0; }
-.concept p { margin: 6px 0 0; font-size: 14px; }
-.concept ol, .concept ul { margin: 6px 0 0; padding-left: 20px; font-size: 14px; }
-.concept li { margin: 2px 0; }
-.concept .ex { font-size: 13px; color: var(--muted); margin-top: 8px; }
-.concept.is-done { border-color: var(--good); }
-.groupttl { font-family: var(--f-display); font-size: 20px; margin: 22px 0 10px; }
-.groupttl:first-child { margin-top: 0; }
-table.anchors { border-collapse: collapse; font-size: 14px; width: 100%; margin-top: 6px; }
-table.anchors td { padding: 4px 8px 4px 0; border-top: 1px solid var(--line); vertical-align: top; }
-table.anchors td:last-child { font-family: var(--f-mono); text-align: right; white-space: nowrap; }
+.co-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 14px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+.panel h3 { font-size: 18px; margin-bottom: 6px; }
+.panel ol, .panel ul { margin: 6px 0 0; padding-left: 20px; font-size: 14px; }
+.panel li { margin: 3px 0; }
+.panel p { font-size: 14px; margin: 6px 0 0; }
+.cotabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.cotabs button { font-family: var(--f-display); font-weight: 700; font-size: 18px; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; }
+.cotabs button[aria-pressed=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
-.res { display: grid; gap: 10px; }
-.res .item { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
-.res .item p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
-.empty { color: var(--muted); padding: 24px 0; }
+.cbgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.case { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; min-width: 0; cursor: pointer; text-align: left; width: 100%; }
+.case:hover { border-color: var(--accent); }
+.case.is-done { border-color: var(--good); }
+.case .top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.case .seg { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 4px; font-weight: 500; background: var(--sc-bg); color: var(--sc-fg); }
+.case h4 { font-size: 16px; }
+.case .prompt { font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.case .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); font-family: var(--f-mono); flex-wrap: wrap; }
+.stars { color: var(--mark); letter-spacing: 1px; font-size: 14px; white-space: nowrap; }
+.stars .off { color: var(--line); }
+.readlist { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.readlist button { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
+.readlist button span { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-left: 6px; }
+:root { --s-design: #2a4bd7; --s-rca: #b3261e; --s-guess: #16784e; --s-improve: #6a38b8; --s-metrics: #8a6100; --s-pricing: #0d6a75; --s-gtm: #b4501b; --s-strategy: #3d4663; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s-design: #93a6ff; --s-rca: #ff8a80; --s-guess: #62d39d; --s-improve: #c6a4ff; --s-metrics: #f2c14e; --s-pricing: #6fd3de; --s-gtm: #f0a070; --s-strategy: #b8c0dc; } }
+:root[data-theme="dark"] { --s-design: #93a6ff; --s-rca: #ff8a80; --s-guess: #62d39d; --s-improve: #c6a4ff; --s-metrics: #f2c14e; --s-pricing: #6fd3de; --s-gtm: #f0a070; --s-strategy: #b8c0dc; }
+.seg-design { --sc-fg: var(--s-design); } .seg-rca { --sc-fg: var(--s-rca); } .seg-guess { --sc-fg: var(--s-guess); } .seg-improve { --sc-fg: var(--s-improve); }
+.seg-metrics { --sc-fg: var(--s-metrics); } .seg-pricing { --sc-fg: var(--s-pricing); } .seg-gtm { --sc-fg: var(--s-gtm); } .seg-strategy { --sc-fg: var(--s-strategy); }
+.case .seg { background: color-mix(in srgb, var(--sc-fg) 14%, transparent); }
 
-@media (max-width: 760px) {
+.viewer { position: fixed; inset: 0; z-index: 50; background: var(--sheet); display: grid; grid-template-rows: auto minmax(0,1fr); padding-top: env(safe-area-inset-top, 0px); }
+.vbar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.vbar h3 { font-size: 17px; min-width: 0; }
+.vbar .sub { font-size: 12px; color: var(--muted); font-family: var(--f-mono); }
+.vctl { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.vctl .pg { font-family: var(--f-mono); font-size: 13px; min-width: 88px; text-align: center; font-variant-numeric: tabular-nums; }
+.vbody { display: grid; grid-template-columns: minmax(0,1fr) 320px; min-height: 0; }
+.canvaswrap { overflow: auto; padding: 16px; min-width: 0; display: flex; justify-content: center; align-items: flex-start; }
+.canvaswrap canvas { background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,.18); max-width: none; }
+.vmsg { color: var(--muted); padding: 40px 16px; text-align: center; max-width: 50ch; }
+.vside { background: var(--surface); border-left: 1px solid var(--line); padding: 16px; overflow: auto; display: grid; gap: 14px; align-content: start; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+.rate { display: flex; gap: 4px; }
+.rate button { background: none; border: 0; font-size: 28px; line-height: 1; cursor: pointer; color: var(--line); padding: 2px; }
+.rate button.on { color: var(--mark); }
+.ratehelp { font-size: 12px; color: var(--muted); }
+@media (max-width: 860px) {
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .cgrid { grid-template-columns: minmax(0,1fr); }
+  .co-grid { grid-template-columns: minmax(0,1fr); }
   .row { grid-template-columns: auto minmax(0,1fr); }
-  .row .actions { grid-column: 2; }
+  .row .actions { grid-column: 2; justify-content: flex-start; }
+  .vbody { grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr) auto; }
+  .vside { border-left: 0; border-top: 1px solid var(--line); max-height: 42vh; }
 }
 @media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
 </style>
 
 <header class="top wrap">
-  <div class="eyebrow">APM / PM-1 interview prep</div>
+  <div class="eyebrow">APM / PM-1 interview prep · Juspay &amp; Swiggy focus</div>
   <h1>ProductPrep Tracker</h1>
-  <p class="lede">Three days of breadth on your own, then a seven-day sprint alongside experienced PMs. Tick things off as you go. Flag anything you want to bring to a mentor.</p>
+  <p class="lede">Real questions candidates reported, the IIMA and IIMB (Sigma) casebooks with every case one click away, and a 10-day plan that ties them together. Tick, rate and take notes as you go.</p>
   <div class="stats" id="stats"></div>
   <div class="sync" id="sync">Saving on this device</div>
 </header>
@@ -154,522 +192,805 @@ table.anchors td:last-child { font-family: var(--f-mono); text-align: right; whi
 <nav class="tabs" aria-label="Sections">
   <div class="wrap" role="tablist">
     <button role="tab" data-tab="plan" aria-selected="true">Schedule</button>
-    <button role="tab" data-tab="bank" aria-selected="false">Question bank</button>
-    <button role="tab" data-tab="concepts" aria-selected="false">Concepts &amp; frameworks</button>
-    <button role="tab" data-tab="resources" aria-selected="false">Resources</button>
+    <button role="tab" data-tab="bank" aria-selected="false">Real questions</button>
+    <button role="tab" data-tab="focus" aria-selected="false">Juspay &amp; Swiggy</button>
+    <button role="tab" data-tab="cases" aria-selected="false">Casebooks</button>
+    <button role="tab" data-tab="concepts" aria-selected="false">Concepts</button>
+    <button role="tab" data-tab="sources" aria-selected="false">Sources</button>
   </div>
 </nav>
 
 <main class="wrap" id="main"></main>
+<div id="viewerRoot"></div>
 
 <script>
-/* ---------------- Content ---------------- */
-const CATS = [
-  { id: "pd", name: "Product design", blurb: "Design a product for a user group or a problem. Tests user empathy, creativity and structure. The most common APM round." },
-  { id: "pi", name: "Product improvement", blurb: "Improve an existing product. Same playbook as design, but start by stating what the product is for and who uses it today." },
-  { id: "fp", name: "Favorite product", blurb: "Talk about a product you love or would fix. Usually an opener. Prepare 2 products in depth." },
-  { id: "me", name: "Metrics & success", blurb: "Define success, pick a north star, set guardrails, decide trade-offs. Often folded into the analytical round." },
-  { id: "rca", name: "Root cause analysis", blurb: "A metric moved. Find out why. Very common in Indian APM loops (Swiggy, Zomato, Flipkart, PhonePe style companies)." },
-  { id: "gs", name: "Guesstimates", blurb: "Estimate a number with clear logic. Less common as a standalone round in 2026, but still used for freshers and inside bigger cases." },
-  { id: "st", name: "Strategy & business", blurb: "Market entry, competition, monetization, build vs buy. Shows business judgement." },
-  { id: "ex", name: "Execution & prioritization", blurb: "Trade-offs, launch calls, roadmaps, stakeholder pushback." },
-  { id: "te", name: "Technical", blurb: "Can you talk to engineers? Basics of the web, APIs, data, and simple SQL." },
-  { id: "ai", name: "AI product sense", blurb: "New in most 2026 loops. Designing features on top of models that are sometimes wrong, and measuring them." },
-  { id: "bh", name: "Behavioral", blurb: "Your stories, told with STAR. Every loop has it, and freshers are judged heavily on it." }
-];
+/* ============ Sources ============ */
+const SRC = {
+  gd_jp_apm: ["Glassdoor: Juspay APM interviews", "https://www.glassdoor.co.in/Interview/JUSPAY-Associate-Product-Manager-Interview-Questions-EI_IE1102352.0,6_KO7,32.htm"],
+  gd_jp_pm: ["Glassdoor: Juspay PM interviews", "https://www.glassdoor.co.in/Interview/JUSPAY-Product-Manager-Interview-Questions-EI_IE1102352.0,6_KO7,22.htm"],
+  gd_jp_pta: ["Glassdoor: Juspay Product Technical Analyst", "https://www.glassdoor.com/Interview/JUSPAY-Product-Technical-Analyst-Interview-Questions-EI_IE1102352.0,6_KO7,32.htm"],
+  gv_jp: ["Grapevine: Product Manager interview @ Juspay", "https://www.grapevine.in/post/product-manager-interview-juspay-48f500ce-f7d4-4eeb-bd2e-e82d7d2d3db3"],
+  gv_jp_code: ["Grapevine: Juspay product interviews had a coding round", "https://www.grapevine.in/post/juspay-product-interviews-had-a-coding-round-c9997524-481d-427c-88c7-00cd48cbdb34"],
+  bi_jp: ["Board Infinity: Juspay PM interview guide", "https://discuss.boardinfinity.com/t/juspay-product-manager-interview-questions-experience-guide/23345"],
+  salt_jp: ["The Product Salt: Juspay APM case study (Scribd)", "https://www.scribd.com/document/819192622/JUSPAY-Case-Study-by-The-product-salt"],
+  pmx_sw: ["PM Exercises: Swiggy questions", "https://www.productmanagementexercises.com/interview-questions/swiggy"],
+  pmx_sw_rca: ["PM Exercises: Swiggy orders down 20%", "https://www.productmanagementexercises.com/11338/swiggy-observed-number-orders-compared-before-would-analysis"],
+  pmx_sw_norush: ["PM Exercises: 'no rush' delivery for Instamart", "https://www.productmanagementexercises.com/9966/how-would-you-about-launching-rush-delivery-instamart-swiggy"],
+  pmx_sw_cpo: ["PM Exercises: Swiggy CPO top 3 metrics", "https://www.productmanagementexercises.com/7253/suppose-chief-product-officer-swiggy-indian-delivery-metrics"],
+  pmx_sw_4x: ["PM Exercises: Swiggy revenue 4x", "https://www.productmanagementexercises.com/2252/how-would-you-increase-the-revenue-of-swiggy-by-4x"],
+  pmx_sw_aov: ["PM Exercises: Swiggy AOV +15%", "https://www.productmanagementexercises.com/11842/how-will-you-increase-aov-average-order-value-15%25-for-swiggy"],
+  exp_sw_rest: ["Aced/Exponent: Swiggy product for restaurants", "https://www.tryexponent.com/questions/795/swiggy-pm-product-for-restaurants"],
+  exp_sw: ["Aced/Exponent: Swiggy PM questions", "https://www.tryexponent.com/questions?company=swiggy&role=pm"],
+  gd_sw_apm: ["Glassdoor: Swiggy APM interviews", "https://www.glassdoor.com/Interview/Swiggy-Associate-Product-Manager-Interview-Questions-EI_IE952680.0,6_KO7,32.htm"],
+  gd_sw_pm: ["Glassdoor: Swiggy PM interviews", "https://www.glassdoor.co.in/Interview/Swiggy-Product-Manager-Interview-Questions-EI_IE952680.0,6_KO7,22.htm"],
+  gd_inmobi: ["Glassdoor: InMobi question, Swiggy orders per day", "https://www.glassdoor.com/Interview/Guesstimate-Number-of-Swiggy-orders-being-delivered-everyday-QTN_3787307.htm"],
+  md_sw20: ["Medium, PM Club: Swiggy orders dropped 20%", "https://medium.com/@pmclub/swiggys-orders-have-dropped-by-20-pm-interview-root-cause-analysis-0209596e3374"],
+  md_sw_rev: ["Medium: Swiggy revenue +20% via product-led growth", "https://medium.com/design-bootcamp/pm-interview-question-you-are-pm-at-swiggy-food-delivery-vertical-and-target-give-to-you-is-to-bump-efe715e6f9bc"],
+  hs_sw: ["HireStepX: Swiggy PM questions", "https://hirestepx.com/questions/swiggy-pm-interview-questions"],
+  df_sw: ["Dataford: Swiggy PM guide", "https://dataford.io/interview-guides/swiggy/product-manager"],
+  htc_sw: ["Hacking the Case: Swiggy case interview", "https://www.hackingthecaseinterview.com/pages/swiggy-case-interview"],
+  iq_sw_ba: ["Interview Query: Swiggy BA guide", "https://www.interviewquery.com/interview-guides/swiggy-business-analyst"],
+  ai_apm: ["Agile Insider: APM interview process in India", "https://medium.com/agileinsider/the-apm-interview-process-9bcc1e6d20d7"],
+  fk_md: ["Medium: Flipkart APM interview experience (Part II)", "https://medium.com/nans-with-love/flipkart-apm-interview-experience-part-ii-e536d403c619"],
+  htc_fk: ["Hacking the Case: Flipkart case interview", "https://www.hackingthecaseinterview.com/pages/flipkart-case-interview"],
+  pl_blinkit: ["Product Leadership: Blinkit PM questions", "https://www.productleadership.com/blinkit-product-manager-interview-questions/"],
+  cq_zomato: ["Communiqué IIT KGP: Zomato/Blinkit product series", "https://cq-iitkharagpur.medium.com/cq-product-series-avi-singh-raghuvanshi-zomato-88322f2285d4"],
+  iq_meesho: ["Interview Query: Meesho PM guide", "https://www.interviewquery.com/interview-guides/meesho-product-manager"],
+  gd_paytm: ["Glassdoor: Paytm PM interviews", "https://www.glassdoor.co.in/Interview/Paytm-Product-Manager-Interview-Questions-EI_IE1159356.0,5_KO6,21.htm"],
+  igo_gapm: ["IGotAnOffer: Google APM interview", "https://igotanoffer.com/blogs/product-manager/google-associate-product-manager-interview"],
+  acc_gs: ["Accredian: 25 guesstimates for PM interviews in India", "https://blog.accredian.com/25-guesstimate-questions-for-product-manager-interviews-in-india-updated-2023/"],
+  exp_52: ["Aced/Exponent: 52 real PM interview questions", "https://www.tryexponent.com/blog/top-product-manager-interview-questions"],
+  dpm_2025: ["The Data PM 101: PM interviews in 2025", "https://thedatapm101.substack.com/p/mastering-the-product-management"],
+  ne_ai: ["Northeastern: AI PM interview questions (2026)", "https://careers.northeastern.edu/blog/2026/06/11/ai-product-manager-interview-questions-2026-guide/"],
+  ld_ai: ["GitHub landedjobs: AI PM interview prep 2026", "https://github.com/landedjobs/ai-pm-interview-prep"],
+  k1_ai: ["KORE1: AI PM interview questions 2026", "https://www.kore1.com/ai-product-manager-interview-questions-2026/"],
+  ag_ai: ["Aakash Gupta: AI product sense guide", "https://www.news.aakashg.com/p/ai-product-sense-guide"],
+  exp_ms: ["Aced/Exponent: Microsoft PM intern guide", "https://www.tryexponent.com/guides/microsoft-product-manager-intern-interview"],
+  pa_amz: ["Product Alliance: Amazon PM cheat sheet", "https://www.productalliance.com/guides/amazon-pm-interview-cheat-sheet"],
+  leland: ["Leland: common PM behavioral questions", "https://www.joinleland.com/library/a/preparing-for-your-product-manager-behavioral-interview-tips-and-strategies"],
+  pl_apm: ["Product Leadership: APM interview questions", "https://www.productleadership.com/blog/associate-product-manager-interview-questions/"],
+  hpm_rca: ["HelloPM: approaching RCA questions", "https://hellopm.co/how-to-approach-rca-questions/"]
+};
 
+/* ============ Question types ============ */
+const TYPES = [
+  { id: "rca", name: "Root cause analysis", blurb: "A metric moved. Find why. The most reported question type in Indian APM loops." },
+  { id: "guess", name: "Guesstimates", blurb: "Still common for freshers in India, often chained into a case (estimate, then grow it)." },
+  { id: "design", name: "Product design", blurb: "Build something new for a user group or a business goal." },
+  { id: "improve", name: "Improvement & favorite product", blurb: "Improve an existing product. Favorite product is a frequent opener." },
+  { id: "metrics", name: "Metrics & success", blurb: "North star, success metrics, trade-offs, experiments." },
+  { id: "strategy", name: "Strategy, GTM & pricing", blurb: "Compete, enter, launch, monetize." },
+  { id: "exec", name: "Execution & prioritization", blurb: "Trade-offs, priorities, launches." },
+  { id: "tech", name: "Technical & data", blurb: "Payments flows, SQL, data problems, coding rounds (Juspay)." },
+  { id: "ai", name: "AI product sense", blurb: "2026 loops ask about hallucinations, evals and when to ship AI vs rules." },
+  { id: "behav", name: "Behavioral & fit", blurb: "Your stories, why the company, walk through your resume." }
+];
+const BADGE = { R: ["Reported", "rep", "A candidate or a company-tagged question bank says this was asked."], G: ["Guide", "gd", "An interview-prep guide lists this as a typical question for the company. Less verified."], P: ["Practice", "plain", "Practice question written to match the company's business. Not a reported question."] };
+
+/* id, type, company, question, source, badge, hint */
 const Q = [
-  // Product design
-  ["pd1","pd","Design an alarm clock for people who are deaf or hard of hearing.","E","Segment by context (home, hostel, travel, shared room). Pains: waking without sound, not waking others. Ideas: vibrating wearable, light ramp, bed shaker, smartwatch sync. Metric: on-time wake-ups."],
-  ["pd2","pd","Design a product to help elderly people in India manage their medicines.","M","Two users: the elder and the caregiver (often a child in another city). Pains: forgetting doses, refills, small text. Think voice reminders, pharmacy auto-refill, caregiver alerts."],
-  ["pd3","pd","Design a car-pooling product for office commuters in Bengaluru.","M","Two-sided: riders and drivers. Trust and safety are the core pain (verified work email, women-only pools). Metric: matched rides per week, repeat pools."],
-  ["pd4","pd","Design a smart refrigerator for a family of five.","E","Users: the person who shops, the person who cooks, kids. Pains: food waste, running out of staples. Keep ideas grounded; say which one you'd build first and why."],
-  ["pd5","pd","Design a navigation experience for visually impaired pedestrians.","H","Clarify: fully blind vs low vision, city vs campus. Pains: obstacles, crossings, last 50 metres. Ideas: haptic cues, audio landmarks, volunteer call. Call out safety risk explicitly."],
-  ["pd6","pd","Design a product for first-time investors on a trading app like Groww or Zerodha.","M","Segments: salaried 22 to 30, students, small-town savers. Pains: fear of loss, jargon, choosing funds. Ideas: goal-based SIPs, paper trading, plain-language risk labels."],
-  ["pd7","pd","Design a dating or companionship app for people over 50.","M","Pains differ from young users: safety, family judgement, tech comfort. Consider friendship vs romance. Metric: conversations that lead to a meeting."],
-  ["pd8","pd","Design a vending machine for a college campus.","E","Users: hostel students late at night, staff. Think UPI payment, stock alerts, healthy options, pre-order. Good warm-up case."],
-  ["pd9","pd","Design a feature for Swiggy or Zomato to help users decide what to eat.","E","Decision fatigue is the pain. Segment by occasion (solo lunch, group dinner, craving). Ideas: mood filters, 'order again', group voting. Metric: time to order, conversion."],
-  ["pd10","pd","Design a product to help students prepare for competitive exams.","M","Segments: JEE/NEET aspirants, UPSC, CAT. Pains: discipline, doubt solving, cost. Pick one segment deeply rather than all."],
-  ["pd11","pd","Design an ATM for rural India.","M","Users: low literacy, first-time bank users, elderly pensioners. Pains: language, trust, cash outage. Ideas: voice in local language, biometric (AePS), cash availability alerts."],
-  ["pd12","pd","Design a product that helps remote teams feel more connected.","M","Clarify company size and time zones. Pains: no casual chats, new joiners feel lost. Measure with retention and engagement survey, not just usage."],
-  ["pd13","pd","Design a parking app for a busy mall.","E","Users: shoppers, mall operator, attendants. Pains: finding a spot, finding the car later, paying. Ideas: live spot map, pre-book, 'where did I park'."],
-  ["pd14","pd","Build a product for kirana store owners to manage inventory.","H","Very India-specific. Owners are busy, low on time for data entry. Ideas: bill-scan to stock, WhatsApp ordering from distributors, credit (udhaar) ledger. Monetize via distributors or credit."],
-  ["pd15","pd","You are a PM at LinkedIn. What new product would you build for freshers looking for jobs?","M","Pick a sharp pain: no experience to show, ghosting by recruiters, not knowing which roles fit. Tie back to LinkedIn's goals (engagement, premium, recruiter revenue)."],
+  ["jp1","behav","Juspay","Walk me through your resume. What are your current roles and responsibilities?","gd_jp_apm","R","Two minutes, told as a story towards product. For each role: what you owned, one number, and what it taught you about users or tech."],
+  ["jp2","behav","Juspay","What do you know about Juspay?","gd_jp_pta","R","Payments infrastructure for merchants and banks: checkout (Express Checkout / HyperSDK), payment orchestration, open-source Hyperswitch, UPI stack for banks, Smart Gateway with HDFC. Say who pays Juspay and why."],
+  ["jp3","behav","Juspay","Why Juspay? (HR also asks you to fill an SOP before the first round.)","gd_jp_apm","R","Tie a real interest (payments, infra, developer products) to Juspay's scale and engineering culture. Write the SOP answer first, then say it in 60 seconds."],
+  ["jp4","guess","Juspay","Guesstimate: number of 4-wheelers running in Mumbai.","gd_jp_apm","R","Clarify: on the road at a moment vs registered, cars only or with taxis and trucks. Households x car ownership by income, plus taxis and commercial. Then the share on the road at peak."],
+  ["jp5","metrics","Juspay","What metrics would you track to increase user adoption in your current product?","gd_jp_apm","R","Pick a product you worked on. Adoption funnel: aware, try, activate, repeat. One north star, 3 inputs, 1 guardrail. Freshers can use a college project or an internship tool."],
+  ["jp6","tech","Juspay","Live problem round: you're given a dataset. Analyse it and arrive at a conclusion.","gd_jp_apm","R","Practise with any public CSV in Excel or Sheets: clean, pivot, find the 2 or 3 facts that matter, state a recommendation and what you'd check next."],
+  ["jp7","rca","Juspay","UPI payments are failing for this merchant. Customers have uploaded videos of the issue. What is your diagnosis?","gd_jp_pm","R","Watch the videos for the failure step: intent not opening, stuck at PIN, timeout, debit without confirmation. Split by UPI app, bank, device, merchant integration version, PSP. Check NPCI or bank downtime before blaming code."],
+  ["jp8","tech","Juspay","How would you detect fraud in a payment gateway?","gd_jp_pta","R","Signals: velocity, device and IP, card BIN vs location, amount patterns, new account with high value. Rules first, then ML scores. Trade-off: false positives cut success rate."],
+  ["jp9","rca","Juspay","You're PM for a line of products at an e-commerce company and profits have gone down. What could be the reasons?","bi_jp","R","Profit = revenue minus costs. Revenue: volume, price, mix. Costs: discounts, returns, logistics, payment costs, marketing. Check each against the time frame."],
+  ["jp10","exec","Juspay","How do you approach prioritizing product features?","bi_jp","G","Goal first, then a simple scoring (RICE or impact vs effort), dependencies, risk. Give a real example."],
+  ["jp11","behav","Juspay","Tell me about a time you managed conflicting priorities in a product project.","bi_jp","G","STAR. Show how you ranked the work against a goal and told people what was not happening."],
+  ["jp12","strategy","Juspay","APM case study: increase adoption of Juspay's Smart Gateway among small and medium businesses. Find their pain points and propose actions.","salt_jp","R","SMB segments (D2C, local retail going online, SaaS). Pains: integration effort, low success rates, reconciliation, pricing. Levers: plugins for Shopify and WooCommerce, no-code setup, success-rate proof, the HDFC channel."],
+  ["jp13","tech","Juspay","Be ready for coding: some Juspay PM loops included an onsite coding hackathon in Bengaluru, a take-home, and a 2.5-hour case round.","gv_jp_code","R","Revise basics in one language: loops, arrays, maps, simple tree problems, reading a log file. Say how you'd work with engineers."],
+  ["jpp1","rca","Juspay","A large merchant's payment success rate fell from 92% to 85% today. Diagnose it.","","P","Break success rate by payment method, gateway, bank, UPI app, platform. A sudden drop points to gateway or bank downtime or a release. Say how routing could recover it."],
+  ["jpp2","design","Juspay","Design a checkout experience for a D2C brand that maximizes payment conversion.","","P","Users: first-time buyers, repeat buyers, COD-heavy users. Ideas: saved methods, UPI intent, smart method ordering, retry on failure, clear refunds."],
+  ["jpp3","tech","Juspay","How would you decide which payment gateway to route each transaction to?","","P","Inputs: live success rate per gateway x method x bank, cost (MDR), latency, downtime. Rules plus scoring, with some exploration. Metric: overall success rate at cost."],
+  ["jpp4","guess","Juspay","Estimate UPI transactions per day in India, then the revenue opportunity for a payments infrastructure company.","","P","Anchor ~20B UPI transactions a month (2025) and check your bottom-up against it. Then P2M share and a per-transaction fee."],
+  ["jpp5","design","Juspay","Design a merchant dashboard that shows payment health.","","P","Users: founder, finance, engineering. Show success rate trend, failures by reason, refunds, settlements, alerts. Make the next action obvious."],
+  ["jpp6","rca","Juspay","UPI Autopay (mandate) failures are rising for a subscription app. What would you do?","","P","Split mandate creation vs recurring debit. Insufficient balance, bank support, pre-debit notification, expired mandates. Retry timing and fallback methods."],
+  ["jpp7","tech","Juspay","Explain what happens when you pay a merchant with UPI, and where it can fail.","","P","Customer app (TPAP) to PSP bank, NPCI switch, issuer bank debit, payee bank credit, confirmation back. Failure points: PIN, bank downtime, timeouts, debit without credit."],
+  ["jpp8","metrics","Juspay","Stricter fraud rules cut chargebacks by 30% but success rate fell 2 points. Keep them?","","P","Put both in money: fraud losses saved vs revenue lost from blocked good payments. Segment the rules and relax the ones blocking good users."],
+  ["jpp9","strategy","Juspay","Go-to-market for an open-source payments switch (like Hyperswitch) aimed at mid-size merchants.","","P","Developers are the entry point: docs, GitHub, easy self-host, then a hosted paid plan. Proof: success-rate and cost-saving case studies."],
 
-  // Improvement
-  ["pi1","pi","How would you improve WhatsApp for small businesses?","M","Start with the business's goals: get orders, reply fast, get paid. Pains: chat overload, no order tracking. Tie to Meta's goal (paid messaging revenue)."],
-  ["pi2","pi","Improve the checkout experience on Blinkit or Swiggy Instamart.","M","Map the funnel: cart, address, slot, payment, confirmation. Find drop-offs. Ideas: saved baskets, substitutions, payment retry."],
-  ["pi3","pi","How would you improve Google Maps?","M","Too broad on purpose. Pick a user segment and a use case (two-wheeler riders in Indian cities, for example) and go deep."],
-  ["pi4","pi","Improve IRCTC train ticket booking.","E","Clear pains: Tatkal rush, waitlist confusion, captcha, payment failures. Prioritize by frequency and severity."],
-  ["pi5","pi","Improve Spotify for podcast listeners.","M","Segments: commuters, learners, background listeners. Pains: discovery, remembering what was said. Ideas: chapters, clips, AI summaries."],
-  ["pi6","pi","Improve UPI apps like PhonePe or Google Pay for first-time users in small towns.","M","Pains: fear of fraud, wrong transfers, language. Ideas: confirm-name screen in local language, voice, trusted contacts. Metric: first-month repeat transactions."],
-  ["pi7","pi","Improve LinkedIn for college students.","E","What do students want: internships, credibility, learning. Pains: empty profile, cold outreach doesn't work."],
-  ["pi8","pi","Improve the Uber or Ola experience at airports.","M","Pains: finding the pickup point, long waits, surge, driver cancellations. Consider both rider and driver sides."],
-  ["pi9","pi","How would you increase engagement on YouTube Shorts?","M","Define engagement first (watch time, shares, creator uploads). Consider viewers and creators. Watch out for quality guardrails."],
-  ["pi10","pi","Reduce churn on a streaming app like JioHotstar or Netflix.","H","Segment churners: after a big event (cricket), price-sensitive, content-exhausted. Different fix per segment."],
+  ["sw1","rca","Swiggy","As a PM at Swiggy, orders went down 20% last week compared with all the weeks before. How would you do the RCA?","pmx_sw_rca","R","Clarify: food, Instamart or Dineout; all cities or some; sudden. Check data first. Internal: release, pricing, delivery fee, restaurant supply. External: Zomato offers, rain, strikes, festivals. Funnel: open, menu, cart, payment, delivered."],
+  ["sw2","rca","Swiggy","Order volume dropped 10% in one specific city over the last week. How would you investigate?","htc_sw","G","City-only means local causes: rider supply, restaurant closures, weather, a local competitor, regulation. Compare with neighbouring cities."],
+  ["sw3","guess","Swiggy","Estimate the number of food deliveries per minute on Swiggy, then say how you would increase it.","hs_sw","R","Top-down: food delivery users x orders per month x Swiggy share / minutes, weighting lunch and dinner peaks. Growth part: frequency, new users, new occasions."],
+  ["sw4","guess","Swiggy","Guesstimate the number of Swiggy orders delivered every day. (Asked at InMobi.)","gd_inmobi","R","Cross-check a demand estimate against supply: riders x orders per rider per day."],
+  ["sw5","strategy","Swiggy","How should Swiggy compete with new entrants in quick commerce?","hs_sw","R","Map rivals (Blinkit, Zepto, Flipkart Minutes, BB Now). Swiggy's edge: food plus Instamart users, Swiggy One. Choose where to win: assortment, speed, price, cities."],
+  ["sw6","metrics","Swiggy","You are the PM for payments. How would you drive adoption of a new digital wallet feature?","hs_sw","R","Why would users load a wallet? Faster checkout, instant refunds, cashback. Funnel: aware, first load, first spend, repeat. Guardrail: payment success rate."],
+  ["sw7","improve","Swiggy","How would you improve the search experience for a first-time user on Swiggy?","hs_sw","R","First-time users don't know restaurant names. Ideas: intent search ('biryani under 300'), popular near you, spelling tolerance, filters. Metric: search to order conversion."],
+  ["sw8","design","Swiggy","Design a feature that would increase order frequency for a specific user segment.","pmx_sw","R","Pick one segment (office lunch, students, families on weekends). Find their barrier to ordering more often and design for it."],
+  ["sw9","strategy","Swiggy","If you add a new category to Instamart, how would you decide which items to prioritize?","pmx_sw","R","Demand signals (searches with no results), margin, shelf life, dark-store space, supplier readiness. Start with a narrow top-seller list."],
+  ["sw10","design","Swiggy","How would you launch a 'no rush' (slower, cheaper) delivery option for Instamart?","pmx_sw_norush","R","Who wants it (planned grocery, price-sensitive). Batch orders to cut rider cost, pass part of the saving on. Risk: cannibalizing fast orders."],
+  ["sw11","design","Swiggy","As Swiggy's PM, how would you design and launch a product for restaurants?","exp_sw_rest","R","Restaurant partners: menu management, demand forecasting, ads, payouts, ratings. Pick one pain, build, launch to a pilot city."],
+  ["sw12","strategy","Swiggy","How would you increase Swiggy's revenue by 4x?","pmx_sw_4x","R","Revenue tree: users x frequency x AOV x take rate, plus new lines (ads, Swiggy One, B2B). Show which levers can realistically double."],
+  ["sw13","improve","Swiggy","How will you increase average order value (AOV) by 15% for Swiggy?","pmx_sw_aov","R","Levers: add-ons, combos, group orders, free-delivery thresholds, recommendations. Guardrail: order frequency and conversion."],
+  ["sw14","metrics","Swiggy","You're the Chief Product Officer of Swiggy. What are the top 3 metrics you would track?","pmx_sw_cpo","R","One per side of the marketplace, or one north star with two health metrics (orders delivered on time, repeat rate, contribution margin per order)."],
+  ["sw15","strategy","Swiggy","You're PM of the food delivery vertical. Grow revenue 20%, mainly through product-led growth. Give a strategy.","md_sw_rev","R","Decompose revenue, pick 2 levers, design features for each, estimate impact, sequence them."],
+  ["sw16","strategy","Swiggy","Quick commerce case study (Instamart) in the product round.","gd_sw_pm","R","Know dark-store economics: orders per store per day, basket size, delivery cost, wastage."],
+  ["sw17","tech","Swiggy","SQL questions on orders data (joins, group by, window functions).","iq_sw_ba","R","Practise: top restaurants by orders per city, repeat rate per user cohort, rank within groups with window functions."],
+  ["sw18","improve","Swiggy","Redesign the checkout flow to reduce drop-offs.","hs_sw","G","Measure the funnel first. Common fixes: delivery fee surprise, coupon errors, payment failures, address friction."],
+  ["sw19","design","Swiggy","Improve delivery ETA reliability.","hs_sw","G","Split ETA into prep, assignment, pickup wait, travel. Better restaurant prep signals, rider positioning, honest buffers."],
+  ["sw20","strategy","Swiggy","How would you balance incentives for restaurants, delivery partners and customers?","df_sw","G","Show the conflict: faster delivery costs rider money, lower fees hurt margins, more restaurants dilutes quality. Pick the constraint that matters this quarter."],
+  ["sw21","rca","Swiggy","Delivery times are climbing and restaurant ratings are dropping in tier-2 cities. Diagnose.","hs_sw","G","Segment by city, restaurant cohort, time of day. Tier-2 specifics: rider supply, fewer quality restaurants, longer distances."],
+  ["sw22","design","Swiggy","Design an app for Swiggy's delivery partners.","hs_sw","G","Pains: earnings uncertainty, long restaurant waits, navigation, safety, payouts. Metric: partner retention and orders per hour."],
+  ["sw23","tech","Swiggy","How would surge pricing work for food delivery (rain, peak hours)?","hs_sw","G","Demand vs rider supply by zone, a clearly shown fee increase, rider bonus. Guardrails: conversion, complaints."],
+  ["sw24","strategy","Swiggy","Evaluate expanding into a city where rivals are already strong.","htc_sw","G","Market size, competitor strength, supply, economics per order, a wedge (Swiggy One, a vertical, a cuisine)."],
+  ["sw25","behav","Swiggy","Tell me about a time you aligned cross-functional teams or managed a difficult stakeholder.","htc_sw","G","Swiggy PMs work with ops, restaurants, riders and engineering. Show how you got agreement with data and listening."],
+  ["sw26","behav","Swiggy","Why Swiggy? Why product?","gd_sw_pm","R","Use the app for a week. Name one feature you admire and one you'd change, and why."],
 
-  // Favorite
-  ["fp1","fp","What is your favorite product and why?","E","Pick something non-obvious you actually use. Cover: who it's for, the problem it solves, what it does better than alternatives, one thing you'd improve, how you'd measure it."],
-  ["fp2","fp","Pick a product you use daily. What would you change about it?","E","Same structure as improvement: goal, users, pains, one prioritized change, metric."],
-  ["fp3","fp","Name a product you think is badly designed. How would you fix it?","M","Be fair. Explain why it may be designed that way (business constraints) before fixing it. Shows maturity."],
-  ["fp4","fp","Tell me about a recent product launch you liked and one you didn't.","M","Read product news for a week. Explain the strategy behind each, not just the UI."],
-
-  // Metrics
-  ["me1","me","What is the north star metric for Spotify?","E","North star = the value users get that also drives the business. Something like time spent listening by active users. Add supporting input metrics and a guardrail."],
-  ["me2","me","How would you measure the success of Instagram Reels?","M","Goal first (compete for short video time, keep creators). Then metrics across the funnel: creation, consumption, engagement, retention. Guardrail: feed and Stories time."],
-  ["me3","me","Define success metrics for 10-minute food delivery (like Swiggy Bolt).","M","Customer side: orders, repeat rate, delivery time promise hit rate. Ops side: rider utilization, cost per order. Guardrail: food quality ratings, rider safety."],
-  ["me4","me","You are PM for Google Pay rewards. What metrics would you track?","M","Why do rewards exist: new users, habit, merchant payments. Measure incremental transactions, not just reward claims. Guardrail: cost per incremental transaction."],
-  ["me5","me","How would you measure success of LinkedIn's 'Open to Work' feature?","M","Two sides: candidates and recruiters. Outcome is hires or recruiter messages. Watch for stigma (people turning it off)."],
-  ["me6","me","A food app launched 'group ordering'. How do you know if it's working?","M","Adoption, completion rate of group orders, basket size vs solo, repeat usage. Cannibalization of solo orders is the key guardrail."],
-  ["me7","me","DAU is up 10% but revenue is flat. What could be happening?","M","New users may be low-value, promo-driven, or in regions with lower spend. Break revenue into users x conversion x order value."],
-  ["me8","me","How do you decide whether a feature launch was successful?","E","Set the goal and a target before launch, use an A/B test or a holdout, check the primary metric, guardrails and segments."],
-  ["me9","me","Design an A/B test for a new checkout button on Flipkart.","M","Hypothesis, primary metric (checkout conversion), guardrails (returns, page load), unit of randomization, duration covering a full week, sample size."],
-  ["me10","me","How would you set goals for YouTube comments?","M","Why comments matter: creator motivation, community. Balance volume with quality (toxicity reports as guardrail)."],
-  ["me11","me","What are the success metrics for WhatsApp Status?","E","Posting rate, viewers per status, replies from status, retention of posters. Tie to the goal of more daily sessions."],
-  ["me12","me","A change increases time spent but lowers ad revenue. Do you ship it?","H","Trade-off framing: short vs long term, size of each effect, which goal matters this year, can you fix the ad drop. Give a decision."],
-
-  // RCA
-  ["rca1","rca","Swiggy orders dropped 15% week over week. Investigate.","M","Clarify metric and time. Check data/tracking first. Internal: releases, pricing, outages. External: competitor offers, festivals, weather, strikes. Segment by city, platform, new vs repeat, funnel step."],
-  ["rca2","rca","Instagram DAU dropped 5% yesterday. Why?","M","Sudden one-day drop leans towards outage, logging bug, or app release. Check platform (iOS vs Android), app version, geography."],
-  ["rca3","rca","Driver-side cancellations on Uber went up 20% in Mumbai.","M","Think from the driver's view: longer pickups, fuel price, incentive changes, destination filters, monsoon traffic. Segment by time of day and area."],
-  ["rca4","rca","Zomato's average delivery time increased by 8 minutes.","M","Break delivery time into parts: restaurant prep, rider assignment, pickup wait, travel. Find which part grew."],
-  ["rca5","rca","Sign-ups on a fintech app fell 30% after a new release.","E","Release is the obvious suspect. Find the step: OTP, KYC, bank linking. Check crash rates and a specific device or OS."],
-  ["rca6","rca","YouTube watch time is down but DAU is flat.","M","Same users, less time. Watch time = sessions x time per session. Check content supply, recommendations change, autoplay, a competitor event (IPL on another app)."],
-  ["rca7","rca","Google Pay transaction success rate fell.","M","Split by bank, UPI app version, payment type (P2P vs merchant), NPCI-side issues. Success rate is often an external dependency problem."],
-  ["rca8","rca","Netflix subscriber churn rose sharply this month.","M","Price change? Password sharing crackdown? Content gap? Payment failures on renewal (card mandates)? Segment by plan and tenure."],
-  ["rca9","rca","Amazon cart abandonment increased.","E","Walk the funnel after cart. Delivery charges, delivery date, payment options, coupon errors, page speed."],
-  ["rca10","rca","Job applications per user on LinkedIn fell.","M","Fewer good jobs posted? Easy Apply change? Seasonality (hiring slows in Dec)? Look at supply (jobs) and demand (seekers) separately."],
-  ["rca11","rca","A food delivery app's Play Store rating fell from 4.4 to 3.9.","E","Read the recent reviews and cluster them. Link to releases, a pricing change, or an ops problem in a city."],
-  ["rca12","rca","Ola bookings dropped only in Bengaluru.","M","City-specific means local causes: regulation, auto strike, competitor launch (Namma Yatri, Rapido), metro line opening, driver supply."],
-
-  // Guesstimates
-  ["gs1","gs","How many cars are sold in India every year?","M","Household approach: households by income band x car ownership x replacement cycle, plus first-time buyers. Sense-check against ~1 car per 30 people ownership levels."],
-  ["gs2","gs","How many WhatsApp messages are sent in India per day?","E","Population, smartphone users, WhatsApp share, daily active, messages per active user per day (split by age group)."],
-  ["gs3","gs","What is the market size of pet food in India?","M","Households, pet-owning share, dog vs cat, share on packaged food, monthly spend. Say urban vs rural clearly."],
-  ["gs4","gs","How many cups of tea are sold in Mumbai each day?","E","Supply-side works well: number of tea stalls x cups per stall. Cross-check with demand side: people x cups bought outside."],
-  ["gs5","gs","How many food delivery orders happen in Bengaluru per day?","M","Population, smartphone users, food-delivery users, orders per user per month. Split by age and income."],
-  ["gs6","gs","Estimate the daily revenue of a Starbucks outlet in a metro mall.","M","Hours open x customers per hour (peak vs off-peak) x average bill. Check against seating capacity."],
-  ["gs7","gs","How many ATMs are there in India?","M","Demand: cash withdrawals per day / withdrawals per ATM per day. Or supply: bank branches x ATMs per branch plus off-site ATMs."],
-  ["gs8","gs","How many flights take off from Delhi airport daily?","M","Runways x operating hours x take-offs per hour at utilization, or passengers per day / passengers per flight / 2."],
-  ["gs9","gs","Estimate YouTube's annual ad revenue in India.","H","Users x hours watched x ads per hour x CPM. Very sensitive to CPM; state a range."],
-  ["gs10","gs","How many smartphones are sold in India each year?","E","Smartphone users / replacement cycle (about 2.5 to 3 years) plus new users per year."],
-  ["gs11","gs","How many Uber rides happen in Delhi per day?","M","Commuters by mode share, then ride-hailing share, then Uber's market share. Or supply: drivers x rides per shift."],
-  ["gs12","gs","How much storage do Google Photos uploads need per day worldwide?","H","Users x photos per day x size per photo (after compression). Add videos separately."],
-  ["gs13","gs","How many petrol pumps are there in India?","M","Vehicles x fuel per day / fuel sold per pump per day. Separate two-wheelers, cars, commercial."],
-  ["gs14","gs","How many golf balls fit in a school bus?","E","Pure volume logic: bus interior volume / ball volume x packing efficiency (~0.64). Good for practising units."],
-  ["gs15","gs","How many people watch Instagram Reels in India every day?","E","Smartphone users, Instagram users, daily active share, share who watch Reels. Segment by age."],
-
-  // Strategy
-  ["st1","st","Should Swiggy launch its own UPI payment app?","M","Why would they: lower payment costs, data, a fintech revenue line. Why not: crowded market, low UPI margins, focus. Decide with a clear recommendation."],
-  ["st2","st","Should Netflix push a cheaper ad-supported plan in India?","M","Price-sensitive market, JioHotstar competition, ad market maturity, brand risk. Use 3Cs."],
-  ["st3","st","How should Spotify compete with YouTube Music in India?","M","YouTube's edge is video and bundling. Spotify's edge could be personalization, podcasts, partnerships with telcos."],
-  ["st4","st","Should Amazon push harder into 10-minute delivery in India?","H","Market size, unit economics (dark stores), existing players (Blinkit, Zepto, Instamart), Amazon's assets (Prime, logistics)."],
-  ["st5","st","Should WhatsApp launch a paid tier for consumers?","M","Who would pay and for what. Risk to growth and trust. Compare with business-side monetization."],
-  ["st6","st","CRED wants to grow beyond credit card bill payments. What should it do next?","M","Assets: affluent users, trust, rewards habit. Options: lending, insurance, commerce, travel. Pick using fit and profit."],
-  ["st7","st","How should a new electric scooter startup enter the Indian market?","H","Segment (delivery riders vs personal commuters), city choice, pricing vs petrol scooters, charging, financing."],
-  ["st8","st","Uber wants to launch in a new Tier-2 city. How would you decide which one?","M","Criteria: demand (population, incomes), supply (drivers, autos), competition, regulation. Build a scoring matrix."],
-  ["st9","st","How would you monetize Google Maps more?","M","Local ads, business listings, APIs for companies, bookings. Protect user trust in rankings."],
-  ["st10","st","Why did Jio succeed so fast? Explain the strategy.","E","Free voice, cheap data, scale, bundled content, deep pockets. Links to network effects and pricing."],
-  ["st11","st","A competitor launches your key feature for free. How do you respond?","M","Don't panic-match. Understand their goal, your users' switching risk, your differentiation. Options: match, bundle, go upmarket, ignore."],
-
-  // Execution
-  ["ex1","ex","You have 5 feature requests and capacity for 2. How do you prioritize?","E","Link to the goal, score with RICE or impact vs effort, check dependencies and risk, communicate the 'no' clearly."],
-  ["ex2","ex","Engineering says the launch will slip by 3 weeks. What do you do?","M","Understand why, cut scope, phase the launch, update stakeholders, check if the date is truly fixed (a festival sale?)."],
-  ["ex3","ex","Sales wants a custom feature for one big client. How do you decide?","M","Revenue at stake vs cost, does it help other clients, maintenance burden, strategic fit."],
-  ["ex4","ex","Write user stories and acceptance criteria for a 'save for later' feature.","E","'As a [user], I want [action] so that [benefit]'. Add edge cases: out of stock, price change, logged out."],
-  ["ex5","ex","Your A/B test shows +2% conversion but more support tickets. Launch?","M","Size both effects in money and user pain, look at segments, can you fix the ticket cause and still ship?"],
-  ["ex6","ex","How would you plan the rollout of a new feature across 3 cities?","M","Pilot city choice, success criteria to expand, ops readiness, feedback loops, rollback plan."],
-  ["ex7","ex","Build a 6-month roadmap for a new habit-tracking app.","M","Now, next, later. Start with retention of the core loop before growth features."],
-
-  // Technical
-  ["te1","te","What happens when you type a URL into a browser and press Enter?","E","DNS lookup, TCP/TLS connection, HTTP request, server response, rendering, extra requests for images and scripts, caching."],
-  ["te2","te","Explain an API to a 10-year-old.","E","A waiter: you order from a menu (request), the kitchen makes it (server), the waiter brings it back (response)."],
-  ["te3","te","How does Google Maps estimate your arrival time?","M","Road graph, shortest path algorithm, live speeds from phones, historical patterns by time of day, ML for adjustments."],
-  ["te4","te","SQL vs NoSQL databases: when would you use each?","M","SQL: structured data, relations, transactions (payments). NoSQL: flexible or huge-scale data (feeds, logs, sessions)."],
-  ["te5","te","The app feels slow. How would you work with engineering to improve load time?","M","Measure first (which screen, which devices). Ideas: caching, smaller images, lazy loading, CDNs, fewer API calls."],
-  ["te6","te","Explain how a UPI payment works end to end.","M","Payer app, payer's bank (PSP), NPCI switch, payee's bank, confirmation. VPA as the address. Where failures happen."],
-  ["te7","te","How does a recommendation system like Netflix's work at a high level?","M","Signals (watch history, ratings), collaborative filtering (people like you), content-based, ranking, feedback loop, cold start."],
-  ["te8","te","Write a SQL query to find the top 5 users by number of orders last month.","E","SELECT user_id, COUNT(*) FROM orders WHERE order_date in range GROUP BY user_id ORDER BY 2 DESC LIMIT 5."],
-
-  // AI
-  ["ai1","ai","Design an AI assistant for customer support at a bank. How do you measure it?","M","Which queries to automate first (balance, card block) vs hand off to humans. Metrics: resolution rate, escalation, CSAT, wrong-answer rate. Safety and compliance guardrails."],
-  ["ai2","ai","Users say the chatbot is confident but wrong. What do you do?","M","Collect and classify failure cases, set up evals, ground answers in sources (RAG), show uncertainty, let users report, add human review for risky topics."],
-  ["ai3","ai","What is the north star metric for an AI writing feature in Gmail?","M","Accepted suggestions that get sent (value delivered), not just impressions. Guardrails: edits needed, complaints, latency."],
-  ["ai4","ai","When should a product use an LLM vs a rules-based system?","M","LLMs for fuzzy language tasks. Rules when accuracy must be 100%, logic is simple, or cost and latency matter most."],
-  ["ai5","ai","Design an AI feature for Swiggy or Zomato.","M","Start from a user pain, not the tech. Ideas: natural-language search ('light dinner under 300'), review summaries, reorder predictions."],
-  ["ai6","ai","A model is right 90% of the time. Is it good enough to launch?","H","Depends on cost of the 10%: a song recommendation vs a medical answer. Look at which errors, add fallbacks, human review, clear UX."],
-  ["ai7","ai","Explain RAG and fine-tuning to a non-technical stakeholder.","E","RAG = the model looks things up in your documents before answering. Fine-tuning = training the model further to change how it behaves."],
-  ["ai8","ai","How would you price an AI feature that is expensive to run?","H","Cost per query, usage patterns, who gets value. Options: premium tier, usage limits, smaller models for easy queries."],
-
-  // Behavioral
-  ["bh1","bh","Tell me about yourself.","E","90 seconds. Present (who you are now), past (2 moments that led to product), future (why this role). End on why PM."],
-  ["bh2","bh","Why product management?","E","A real moment when you solved a user problem or built something. Show you know what the job is day to day."],
-  ["bh3","bh","Why this company?","E","Use the product for a week before the interview. Mention one thing you admire and one idea you have."],
-  ["bh4","bh","Tell me about a time you led without formal authority.","M","College fest, project, internship. Show how you got people aligned: shared goal, data, listening."],
-  ["bh5","bh","Tell me about a failure and what you learned.","M","A real failure with real stakes. Spend most of the time on what you changed afterwards."],
-  ["bh6","bh","Tell me about a conflict with a teammate.","M","Show you understood their side, found common ground, and kept the relationship."],
-  ["bh7","bh","Tell me about a time you used data to make a decision.","M","Even a simple survey or spreadsheet counts. What did the data say, what did you decide, what happened."],
-  ["bh8","bh","Tell me about a time you dealt with ambiguity.","M","A situation without clear instructions. How you created structure and moved forward."],
-  ["bh9","bh","What is your proudest achievement?","E","Pick one with impact on others. Quantify the result."],
-  ["bh10","bh","Tell me about a time you had to say no or prioritize.","M","Shows PM thinking: you chose based on goals and explained the trade-off."],
-  ["bh11","bh","Tell me about a time you received tough feedback.","E","What was said, how you reacted, what you changed."],
-  ["bh12","bh","Tell me about a time you went beyond your role to help a user.","M","Customer obsession. Talk about the user's problem, not just your effort."],
-  ["bh13","bh","Where do you see yourself in 5 years?","E","Growing as a PM, owning a bigger product area, deep in a domain you care about. Keep it tied to this company."],
-  ["bh14","bh","How do you handle competing deadlines?","E","A real example. How you ranked the work and communicated."],
-  ["bh15","bh","Do you have any questions for us?","E","Prepare 3: how PMs are measured here, a recent product decision, what a great first 90 days looks like."]
+  ["r1","rca","Google Pay","You're PM at Google Pay India. You went on vacation and transaction volume dropped 30%. Find the root cause.","ai_apm","R","Sudden 30%: tracking change, outage, bank or NPCI issue, a policy change (limits), a competitor cashback war. Segment by P2P vs merchant, bank, app version."],
+  ["r2","rca","Amazon","Amazon orders are down 30%. How would you do the RCA?","ai_apm","R","Clarify scope and time. Funnel: visits, search, product page, cart, checkout, payment. Internal vs external."],
+  ["r3","rca","Flipkart","The number of cart additions on Flipkart fell 10% in the past three days.","htc_fk","R","Three days means a recent change: release, pricing, a sale ending, search ranking. Split by platform and category."],
+  ["r4","rca","Flipkart","You're a PM at Twitter (X) and you see a decline in engagement. (Asked in a Flipkart APM round.)","fk_md","R","Define engagement (likes, replies, time). Supply of content vs consumption. Check releases, feed ranking changes, outages, news cycle."],
+  ["r5","rca","Flipkart","Spotify introduced a new feature and a key metric dropped. Investigate. (Flipkart APM round.)","fk_md","R","Tie the drop to the launch: which users saw it, did it change a core flow, is there an A/B holdout?"],
+  ["r6","rca","Various","Comments on Instagram have gone down by 40% in the last month. How would you find the root cause?","ai_apm","R","Comments = viewers x posts seen x comment rate. Check UI changes, spam filters, ranking changes, creator behaviour."],
+  ["r7","rca","Meesho","Checkout rates are down on Meesho's customer app. How would you structure the problem?","iq_meesho","R","Meesho users are price-sensitive and often first-time online buyers. Check COD availability, delivery charges, payment options, app version."],
+  ["g1","guess","Various","Estimate how many smartphones are bought in a year in India.","ai_apm","R","Users / replacement cycle (2.5 to 3 years) + first-time buyers. Check against ~650M smartphone users."],
+  ["g2","guess","Various","How many WhatsApp messages are sent in India every day?","exp_52","R","Population, smartphone users, WhatsApp share, daily actives, messages per user by age."],
+  ["g3","guess","Various","How many dentists are there in Mumbai?","acc_gs","R","Demand: people x visits per year / visits a dentist handles per year. Cross-check with clinics per area."],
+  ["g4","guess","Various","How many flights take off from New Delhi every hour?","acc_gs","R","Passengers per day / (seats per flight x load factor) / 2 for arrivals, spread over operating hours with peaks."],
+  ["g5","guess","Various","How many photos are uploaded to Instagram every day?","acc_gs","R","Users, daily actives, share who post, posts per day, photos per post. Split feed vs stories."],
+  ["g6","guess","Various","How many people in India are online right now?","acc_gs","R","Internet users x share active at this hour. Define 'online' first."],
+  ["g7","guess","Various","Estimate the market size for online grocery in India.","acc_gs","R","Urban households online x share buying groceries online x monthly spend x 12."],
+  ["g8","guess","Various","Estimate the number of toothbrushes sold in India each year.","acc_gs","R","Population x share using toothbrushes x replacements per year."],
+  ["g9","guess","Flipkart","Guesstimate: the number of people flying in a day (Flipkart APM round; exact wording is cut off in the source).","fk_md","R","Airport passengers per day in India, or for one city. Scope it with the interviewer first."],
+  ["g10","guess","Google","Estimate how much storage all Google Street View images need.","igo_gapm","R","Road length covered x images per km x size per image. Handle resolution and history."],
+  ["g11","guess","Google","How much does it cost to run YouTube for a day?","igo_gapm","R","Storage + bandwidth (hours watched x bitrate) + compute + people. Bandwidth dominates."],
+  ["g12","guess","Google","Estimate the number of YouTube videos uploaded daily.","igo_gapm","R","Creators x uploads per creator per day, split by casual vs professional."],
+  ["g13","guess","Google","Estimate how many Zoom meetings happen in an average week.","igo_gapm","R","Knowledge workers using Zoom x meetings per week, plus education."],
+  ["g14","guess","Google","What is the market size for driverless cars in 2025?","igo_gapm","R","Robotaxi rides in live cities x fare, plus vehicle sales. Say it's small and why."],
+  ["g15","guess","Google","Estimate the total time people spend at stoplights each year.","igo_gapm","R","Drivers x trips per day x stoplights per trip x wait per light x days."],
+  ["d1","design","Google","Design a product that helps improve work-from-home productivity.","igo_gapm","R","Segment: parents at home, new joiners, managers. Pick the pain (focus, collaboration, boundaries)."],
+  ["d2","design","Google","Redesign Uber for blind passengers.","igo_gapm","R","Journey: booking, finding the car, riding, arriving at the door. Audio and haptic cues, driver prompts, safety."],
+  ["d3","design","Google","Build an app that helps university students choose their courses.","igo_gapm","R","Students, advisors, the university. Pains: unclear outcomes, clashes, peer reviews. Metric: satisfaction and completion."],
+  ["d4","design","Blinkit","Build an online movie ticketing app to capture market share from BookMyShow.","pl_blinkit","R","Find the wedge: price, seat selection, group booking, loyalty, local cinemas BMS underserves."],
+  ["d5","design","Paytm","How would you integrate a merchant review feature into a UPI app?","gd_paytm","R","Link reviews to verified transactions, prompt at the right moment, show on the merchant QR page. Risk: fake reviews."],
+  ["d6","design","Zomato","APM written test: questions on surge pricing, including building a mathematical model for it.","cq_zomato","R","Price = base x f(demand / supply) with caps. Discuss fairness and which signals feed demand and supply."],
+  ["m1","metrics","Various","What success metrics would you track as the Facebook News Feed PM?","dpm_2025","R","Goal (meaningful engagement), then metrics across consumption, interaction, creation, retention, and a guardrail (reports, time well spent)."],
+  ["i1","improve","Various","What is your favorite product and how would you improve it? (Common opener in Indian APM loops.)","ai_apm","R","Prepare two products in depth: users, core job, why it wins, one improvement, a metric."],
+  ["i2","improve","Microsoft","Microsoft PM intern: an AI-focused product case tailored to something on your resume.","exp_ms","R","Pick a project on your resume and practise 'how would you add AI to this' with users, value, risks and a metric."],
+  ["a1","ai","Various","Define hallucination. How would you measure its rate, and at what threshold would you refuse to launch?","ld_ai","R","Measure on a labelled eval set and in production via sampling and user flags. The threshold depends on harm: stricter for money or health."],
+  ["a2","ai","Various","A customer complains about a hallucinated answer in production. What do you do?","ne_ai","R","Contain it, classify the failure, add it to the eval set, improve grounding, communicate."],
+  ["a3","ai","Various","Walk me through your eval harness, offline and online.","ld_ai","R","Offline: golden dataset, graders (human and model), pass criteria. Online: A/B, user feedback, sampled review, cost and latency."],
+  ["a4","ai","Various","When would you ship the AI version of a feature versus the deterministic (rules) version?","ld_ai","R","AI when inputs are messy language and some error is acceptable. Rules when correctness must be exact or the logic is simple."],
+  ["a5","ai","Various","Users say the model is confident but wrong. Diagnose it.","ne_ai","R","Find patterns in wrong answers, check retrieval, prompt and model version. Add uncertainty signals and citations."],
+  ["a6","ai","Various","Define a north star metric for this AI feature.","k1_ai","R","Value delivered, like tasks completed with the AI's help and kept by the user, plus accuracy and cost guardrails."],
+  ["a7","ai","Various","Design an agentic shopping assistant. Write the key parts of its PRD.","ld_ai","R","What the agent does alone vs asks first (the action gate), failure handling, payment safety, evals, metrics."],
+  ["b1","behav","Various","Tell me about a time you launched a product or feature.","pl_apm","R","College project, internship, club. Your role, decisions, result, learning."],
+  ["b2","behav","Various","Tell me about a time you had to influence stakeholders who resisted your idea.","leland","R","Show you understood their concern and used data or a small test to win them over."],
+  ["b3","behav","Various","Tell me about a time you made a decision quickly with incomplete data.","leland","R","What you knew, what you assumed, how you limited risk, what happened."],
+  ["b4","behav","Various","Tell me about a time you handled a difficult stakeholder.","leland","R","Stay factual, show empathy, show the outcome for the relationship."],
+  ["b5","behav","Amazon","Amazon-style: questions mapped to Leadership Principles (Customer Obsession, Dive Deep, Bias for Action, Ownership).","pa_amz","R","Prepare one story per principle, with numbers."],
+  ["b6","behav","Various","Tell me about yourself. Why product management?","exp_52","R","90 seconds, present to past to future. A real moment that pulled you to product."],
+  ["b7","behav","Various","Tell me about a failure and what you learned.","leland","R","Real stakes, own it, spend most of the time on what you changed."]
 ];
 
+/* ============ Casebooks ============ */
+const BOOKS = {
+  iima: { name: "IIMA Product Mindset 2026-27", short: "IIMA", file: "casebooks/iima.pdf" },
+  sigma: { name: "Sigma PM Casebook 2026-27 (IIMB)", short: "Sigma", file: "casebooks/sigma.pdf" }
+};
+const SEGS = { design: "Product design", improve: "App improvement", rca: "RCA", guess: "Guesstimate", metrics: "Metrics", pricing: "Pricing", gtm: "GTM", strategy: "Strategy" };
+/* book, page, segment, name, level, asked-at, prompt */
+const CASES = [
+  ["iima",235,"guess","Instagram Daily Uploads in India","","","Estimate the number of Instagram uploads occurring in India."],
+  ["iima",236,"guess","YouTube Daily Revenue","","","Estimate the revenue that YouTube makes in a day."],
+  ["iima",237,"guess","Zoom Daily Server Usage","","","Estimate Zoom's daily server usage."],
+  ["iima",239,"guess","Food Delivery App Users","","","Estimate the users of a food delivery app in a South American country of 100 million people."],
+  ["iima",240,"guess","Dark Stores for 10-min Coverage of Ahmedabad","","","How many dark stores would a quick-commerce player need in Ahmedabad to guarantee 10-minute delivery?"],
+  ["iima",243,"design","Office Space Sharing","","","Design a mobile app for an office space sharing business for Airbnb."],
+  ["iima",245,"design","Increase Voter Turnout","","","Turnout has stagnated at 55%. Design an app to improve voter turnout."],
+  ["iima",247,"design","Disney Theme Park Experience","","","You are a PM at Disney. Design an app to improve the customer experience at its theme parks."],
+  ["iima",249,"design","Startup Growth Hub by LinkedIn","","","As a PM at LinkedIn, suggest features to leverage India's startup ecosystem."],
+  ["iima",250,"design","Ola for Schoolkids","","","Design the Ola experience for school children's travel (the user and the buyer differ)."],
+  ["iima",252,"design","Airline Entertainment System","","","Delta asks Microsoft Surface to design the perfect airline entertainment system."],
+  ["iima",254,"design","Podcast App at Spotify","","","Improve Spotify as a podcast app."],
+  ["iima",256,"design","Ride Hailing App","","","How would you improve a ride-hailing app like Uber or Ola?"],
+  ["iima",258,"design","Health and Fitness App","","","Develop a health and fitness app for smartphone users (urban India)."],
+  ["iima",260,"design","Internal Knowledge Repository","","","Design a web portal that serves as a company's internal knowledge base."],
+  ["iima",262,"design","Book Recommendation App","","","Design a platform that helps users discover books suited to their interests."],
+  ["iima",264,"design","Samsung Galaxy Buds Experience","","","Use listening data to make the Galaxy Buds experience social."],
+  ["iima",267,"design","AI Customer-Support Copilot","","","Design an AI copilot that helps human agents in a customer-support team."],
+  ["iima",269,"design","Quick Commerce Vendor Management","","","Design a vendor management platform for a quick-commerce company's procurement."],
+  ["iima",272,"design","Bicycle Renting App","","","Design a bicycle renting app for a college campus."],
+  ["iima",274,"design","Antique Marketplace","","","Design an online marketplace for buying and selling antiques."],
+  ["iima",278,"gtm","Social Fitness Product","","","Develop the go-to-market strategy for a new social fitness product."],
+  ["iima",280,"gtm","Table Reservation (Swiggy)","","Swiggy","Swiggy is entering restaurant table reservations. Formulate a launch strategy."],
+  ["iima",283,"gtm","Launching an AI Sales Assistant","","","GTM for a B2B AI sales assistant aimed at mid-market sales teams in India."],
+  ["iima",285,"gtm","Tata Group Loyalty Program","","","Design one loyalty program across Tata brands."],
+  ["iima",288,"metrics","Instagram Creator Marketplace","","","Measure the success of Instagram's Creator Commerce product tagging."],
+  ["iima",290,"metrics","Facebook Marketplace","","","What metrics would you track for the health of Facebook Marketplace?"],
+  ["iima",291,"metrics","BigBasket","","","As BigBasket's digital PM, which metrics would you follow?"],
+  ["iima",293,"metrics","Measuring an AI Feature","","","Measure the success of an AI feature that summarizes long email threads."],
+  ["iima",294,"metrics","Promotions in Google Pay","","","Define metrics for tie-in promotions (scratch cards) on Google Pay."],
+  ["iima",295,"metrics","WhatsApp In-App Video Playing","","","Measure the success of playing YouTube videos inside WhatsApp chats."],
+  ["iima",297,"pricing","Amazon Prime Pricing Projection","","","The VP wants to cut Prime from $99.99 to $89.99 a year. Build the projections."],
+  ["iima",298,"pricing","JioSaavn Family Plan","","","JioSaavn wants to launch a family plan. How would you price it?"],
+  ["iima",299,"pricing","Netflix Pricing Strategy","","","Refine Netflix's India pricing and product strategy after paid sharing."],
+  ["iima",300,"pricing","Vendor Price Negotiation","","","Negotiate a vendor contract for a GPU cloud platform."],
+  ["iima",303,"rca","Drop in Engagement (Duolingo)","","","Duolingo engagement dropped over the last month. How would you analyse it?"],
+  ["iima",305,"rca","Low Adoption Rate (Instagram)","","","Instagram's buy-the-look feature in Reels has very low adoption. Investigate."],
+  ["iima",306,"rca","Spike in Ride Cancellations (Uber)","","","A sudden spike in ride cancellations on Uber. Find the root cause."],
+  ["iima",307,"rca","Decline in Subscriptions (Netflix)","","","Netflix India subscriptions fell 8% month on month."],
+  ["iima",308,"rca","Drop in Daily Active Users","","","Android DAU of a banking app fell 40% in two weeks while iOS stayed flat."],
+  ["iima",309,"rca","Decline in Cart Additions (Myntra)","","","Add to Bag on Myntra is down about 10% over three days."],
+  ["iima",311,"rca","Low CRM Adoption","","","Only 40% of sales reps use the mandated CRM daily. Why?"],
+  ["iima",313,"rca","Users Abandoning Our AI Chatbot","","","Users increasingly abandon an in-app AI chatbot mid-conversation."],
+  ["iima",316,"improve","Facebook Reactions","","","How would you improve Facebook Reactions?"],
+  ["iima",317,"improve","BookMyShow User Engagement","","","Improve BookMyShow engagement through new experiential features."],
+  ["sigma",10,"design","Karate Activity Management App","Easy","","Design an app to help parents manage their children's karate class activities."],
+  ["sigma",11,"design","Cooking App for Urban Users","Easy","","Design an app for the cooking needs of people living in urban areas."],
+  ["sigma",13,"design","Application for Pet Owners","Easy","","Design a product for the pet industry."],
+  ["sigma",15,"design","Theme Park Application","Easy","","Design an app to delight customers of a theme park."],
+  ["sigma",16,"design","Sports App for India","Easy","","Design an app to increase sports adoption in India."],
+  ["sigma",18,"design","Supermarket Application","Easy","","Design a product for a supermarket's customers."],
+  ["sigma",19,"design","Retail Billing Software","Med","","Design billing machine software for retail stores and supermarkets."],
+  ["sigma",20,"design","Refrigerator for Kids","Med","Samsung","You are a PM at Samsung. Design a refrigerator for kids."],
+  ["sigma",22,"design","Remote Worker Productivity","Med","Microsoft","Design a product using AI to improve work-life balance and productivity of remote workers."],
+  ["sigma",24,"design","Tablet for Kids","Med","Google","Design a tablet for kids."],
+  ["sigma",25,"design","Social Media App for the Elderly","Med","","Design a social media app for elderly people."],
+  ["sigma",27,"design","ATM for Airport","Med","","Design an ATM for the departure terminal of an airport."],
+  ["sigma",29,"design","Modernizing a Traditional Store","Med","JPMC","The CEO of a store wants to modernize it. How would you proceed?"],
+  ["sigma",30,"design","Ecommerce for the Elderly","Med","Flipkart","How would you design an e-commerce platform for senior citizens?"],
+  ["sigma",32,"design","Chess App for Complete Beginners","Med","Samsung","You are a PM at Samsung. Design a chess app for complete beginners."],
+  ["sigma",34,"design","Netflix Homepage for New Users","Med","","Design the Netflix home page for brand new users."],
+  ["sigma",36,"design","Airport Check-in System","Med","","Improve the check-in experience for passengers at an airport-tech company."],
+  ["sigma",38,"design","Credit Platform for Teenagers","Hard","","Design a credit platform for teenagers (with guardians)."],
+  ["sigma",39,"design","Uber for Kids","Hard","","Uber wants to enter pooled student commuting in the US."],
+  ["sigma",41,"design","Classroom in the Metaverse","Hard","Google","Design a classroom in the Metaverse."],
+  ["sigma",42,"design","Self-Driving Car for Kids","Hard","Google","Design a self-driving car for kids in India."],
+  ["sigma",44,"design","Car for the Deaf","Hard","","Design a car for people who are deaf."],
+  ["sigma",46,"design","LinkedIn for Blue-Collar Workers","Hard","","Design something like LinkedIn for blue-collar workers in India."],
+  ["sigma",48,"design","Patient Engagement Platform","Hard","","Design a digital platform to improve patient engagement across the healthcare journey."],
+  ["sigma",50,"design","AI Assistant to Support Doctors","Hard","","Design an AI assistant for doctors in small and medium clinics."],
+  ["sigma",51,"design","IIMB Recruitment System","Hard","","Design the recruitment (placement) system for IIM Bangalore."],
+  ["sigma",53,"design","Metrics Dashboard for Uber","Hard","","Design a metrics dashboard for Uber's CXOs."],
+  ["sigma",55,"design","Bank Application for Rural India","Hard","","Design a mobile banking app for rural India."],
+  ["sigma",57,"design","Marketplace for Content Creators","Hard","","Design a platform for companies to find and work with creators."],
+  ["sigma",58,"design","Google Maps x Events x Pay","Hard","","Unify discovering, planning and attending local events across Google products."],
+  ["sigma",59,"design","Help Organizations Hire Better","Hard","","Design a product that helps organizations hire better."],
+  ["sigma",64,"rca","BigBasket Now Orders","Easy","","Orders for BBNow (quick delivery) have dropped. How would you solve this?"],
+  ["sigma",65,"rca","Google Maps ETA","Easy","","Google Maps shows a shorter ETA than the actual trip time."],
+  ["sigma",66,"rca","YouTube Uploads","Easy","","YouTube uploads have dropped. Investigate."],
+  ["sigma",67,"rca","Swiggy Revenue","Med","Swiggy","Swiggy reported a 10% drop in revenue. How would you tackle it?"],
+  ["sigma",68,"rca","Flipkart UGC","Med","","User-generated content (reviews, Q&A) on Flipkart has dropped."],
+  ["sigma",70,"rca","Amazon Return Rate","Med","","The return rate for Amazon products has increased. What can be done?"],
+  ["sigma",72,"rca","Flipkart Notifications","Med","","The open rate of Flipkart notifications is down."],
+  ["sigma",74,"rca","Uber Drivers","Med","","The number of Uber drivers is falling."],
+  ["sigma",76,"rca","QCommerce Platform Sales Drop","Med","","Sales on a quick-commerce platform have dropped."],
+  ["sigma",78,"rca","Adobe Conversions","Med","Adobe","Adobe LMS free-trial to paid conversion is 4 to 5% vs a 7 to 10% benchmark."],
+  ["sigma",80,"rca","Prime Video Views","Hard","","Views on Prime Video have dropped."],
+  ["sigma",82,"rca","Zepto Delivery Time","Hard","","Average delivery time per order at Zepto has risen (SLA breaches)."],
+  ["sigma",84,"rca","Instagram App Opening Rate","Hard","","Instagram's app open rate has dropped."],
+  ["sigma",86,"rca","Zomato Cancellations","Hard","","Customer-initiated cancellations on Zomato rose 4 to 5% in the last few weeks."],
+  ["sigma",88,"rca","E-Pharmacy Orders","Hard","","Orders on an e-pharmacy platform have dropped."],
+  ["sigma",92,"pricing","JioSaavn Family Pack","Easy","","Price a JioSaavn family pack."],
+  ["sigma",93,"pricing","Apple Smart Speaker","Easy","","Price a new Apple smart speaker."],
+  ["sigma",94,"pricing","Amazon Prime","Med","","A pricing decision for Amazon Prime in a given market."],
+  ["sigma",96,"improve","Uber","Easy","Adobe","Improve the product design for Uber."],
+  ["sigma",97,"improve","HealthifyMe","Easy","","HealthifyMe has low engagement. How would you improve it?"],
+  ["sigma",98,"improve","Spotify","Easy","","How would you improve Spotify? Pick one area."],
+  ["sigma",99,"improve","Google Calendar","Easy","","Improve Google Calendar."],
+  ["sigma",100,"improve","Improve Hotstar UX","Easy","","Improve the viewer experience on Hotstar and increase loyalty."],
+  ["sigma",102,"improve","Ride Hailing App (Ola)","Easy","","Improve Ola to increase user interactions and usage."],
+  ["sigma",103,"improve","Spotify (critique an app you like)","Easy","Atlassian","Critique and improve an application you like."],
+  ["sigma",105,"improve","Hotstar","Med","","How would you improve the experience of an OTT platform like Hotstar?"],
+  ["sigma",107,"improve","AI for Myntra's App","Med","","Use AI to significantly increase customer engagement on Myntra."],
+  ["sigma",109,"improve","Booking.com","Med","","Improve Booking.com for property owners who list hotels or homestays."],
+  ["sigma",110,"improve","Mobile Banking App","Med","","Improve the IDFC Bank mobile app to prevent frauds."],
+  ["sigma",112,"improve","Instagram AI Feature","Med","","How would you integrate AI into Instagram?"],
+  ["sigma",114,"improve","Google Maps","Med","VMock","How would you improve Google Maps?"],
+  ["sigma",116,"improve","UPI Application","Med","AppDynamics","What is your favourite UPI app and how would you improve it?"],
+  ["sigma",118,"improve","Amazon Kindle","Med","","How would you improve Kindle?"],
+  ["sigma",120,"improve","YouTube","Med","","Take the lead in improving YouTube."],
+  ["sigma",122,"improve","Travel Booking App (MMT)","Med","","Improve MakeMyTrip's flight booking for engagement and retention."],
+  ["sigma",124,"improve","Tinder","Med","","Pick a dating app and improve it."],
+  ["sigma",126,"improve","Swiggy","Med","Swiggy","Improve the Swiggy app (you define the goal)."],
+  ["sigma",128,"improve","Microsoft PowerPoint","Hard","","You are tasked with improving Microsoft PowerPoint."],
+  ["sigma",130,"improve","Amazon Notification System","Hard","","Design Amazon's notification system as if it were new."],
+  ["sigma",132,"improve","Myntra","Hard","","Improve a fashion e-commerce app of your choice."],
+  ["sigma",134,"improve","AI Optimisation for a Collaboration App","Hard","","Suggest AI features to improve a team collaboration platform."],
+  ["sigma",136,"guess","WhatsApp Chats","Easy","","Estimate the number of WhatsApp chats in India in a day."],
+  ["sigma",137,"guess","Storage for Google Photos","Easy","Google","Estimate how much storage Google Photos needs."],
+  ["sigma",138,"guess","Number of Uber Drivers","Easy","Samsung R&D","How many Uber drivers are there in Bangalore?"],
+  ["sigma",139,"guess","Google Drive Storage for Singapore","Easy","","Storage needed to give 200 GB of free Drive storage to people in Singapore."],
+  ["sigma",140,"guess","Bike Taxis","Med","Google","You're starting a bike taxi company. How many bikes do you need?"],
+  ["sigma",141,"guess","Google Searches","Med","","Estimate the number of queries Google answers per second."],
+  ["sigma",142,"guess","Swiggy Orders","Med","Swiggy","Estimate the number of orders Swiggy delivers per hour in India."],
+  ["sigma",143,"guess","Google Meets","Med","","Estimate the total number of Google Meets held daily."],
+  ["sigma",144,"guess","Bhojpuri Short-Movie App Users","Hard","","Estimate potential users of a Bhojpuri short-movie app."],
+  ["sigma",146,"strategy","Fake Products on Instagram","","","How would you stop fake product selling on Instagram?"],
+  ["sigma",147,"strategy","Digital Transformation of a Pizza Shop","","","Help a small pizza store go digital."],
+  ["sigma",149,"strategy","Users Moving Away from WhatsApp","","","How would you stop people moving from WhatsApp to Telegram?"],
+  ["sigma",151,"strategy","Market Entry: MakeMyTrip in Dubai","","","MMT is considering entering Dubai. What should the entry strategy be?"],
+  ["sigma",153,"metrics","Success Metrics: Swiggy IPO","","Swiggy","As Swiggy's CPO, which product metrics would you monitor ahead of an IPO?"],
+  ["sigma",154,"metrics","Success Metrics: Gmail","","","What would be the success metrics for Gmail?"]
+].map(c => ({ id: (c[0] === "iima" ? "ia" : "sg") + "-" + c[1], book: c[0], page: c[1], seg: c[2], name: c[3], lvl: c[4], asked: c[5], prompt: c[6] }));
+
+const READING = [
+  { book: "sigma", page: 8, name: "Product design approach" },
+  { book: "iima", page: 205, name: "Product design do's and don'ts" },
+  { book: "sigma", page: 62, name: "RCA approach" },
+  { book: "sigma", page: 63, name: "RCA framework" },
+  { book: "iima", page: 231, name: "Intro to RCA" },
+  { book: "iima", page: 202, name: "Guesstimate tips" },
+  { book: "sigma", page: 159, name: "Guesstimate datasheet" },
+  { book: "iima", page: 223, name: "Intro to product metrics" },
+  { book: "sigma", page: 157, name: "North star metrics" },
+  { book: "iima", page: 212, name: "Go-to-market" },
+  { book: "iima", page: 227, name: "Pricing" },
+  { book: "sigma", page: 91, name: "Pricing approach" },
+  { book: "sigma", page: 158, name: "Frameworks at a glance" },
+  { book: "iima", page: 146, name: "Sector: Quick commerce" },
+  { book: "iima", page: 150, name: "Sector: FinTech" },
+  { book: "iima", page: 160, name: "Sector: Food tech" },
+  { book: "iima", page: 164, name: "Sector: E-commerce" },
+  { book: "iima", page: 196, name: "Sector: AI" },
+  { book: "iima", page: 115, name: "LLMs & prompting" },
+  { book: "iima", page: 125, name: "MCP, RAG, agentic AI" },
+  { book: "iima", page: 139, name: "System design" }
+];
+
+/* ============ Concepts ============ */
 const CONCEPTS = [
   { g: "How the interview works", items: [
-    { id: "c-rounds", name: "The APM / PM-1 loop", what: "Most loops have 4 to 6 rounds: a recruiter or HR screen, product sense (design or improvement), analytical (metrics, RCA, sometimes a guesstimate), strategy or execution, technical or AI, and behavioral. Many Indian startups add a take-home assignment or a product teardown.", list: ["Product sense: can you find a real user problem and a good solution?","Analytical: can you define success and debug a metric?","Behavioral: can people trust you to lead without authority?"], ex: "Freshers are judged more on structure, communication and curiosity than on domain depth." },
-    { id: "c-grading", name: "What interviewers score", what: "Almost every company grades the same things, whatever the case.", list: ["Structure: a clear plan you say out loud","User empathy: specific users and specific pains","Prioritization: you choose, and explain why","Creativity: at least one non-obvious idea","Metrics: you know how you'd measure it","Communication: summarizing, checking in, handling hints"], ex: "Say your structure before you start, and summarize at the end. That alone lifts most fresher answers." },
-    { id: "c-approach", name: "How to run any case", what: "A general rhythm that works for all case types.", list: ["Repeat the question and ask 2 to 3 clarifying questions","Say your approach in one line","Take 1 minute to think (ask for it, it's fine)","Go step by step, checking in with the interviewer","Make choices and state assumptions","Summarize: recommendation, why, next steps, risks"] }
+    { id: "c-rounds", name: "The APM / PM-1 loop in India", what: "Most loops: recruiter screen, then 2 to 4 case rounds (design or improvement, RCA, guesstimate, metrics), a behavioral or hiring-manager round, sometimes a take-home. Juspay adds a data problem and, in some PM loops, coding. Swiggy adds marketplace cases.", ex: "Freshers are judged on structure, communication, curiosity and user empathy more than domain depth." },
+    { id: "c-approach", name: "How to run any case", what: "A rhythm that works for every case type.", list: ["Repeat the question, ask 2 to 3 clarifying questions","Say your approach in one line","Ask for a minute to think","Go step by step and check in","Make choices and state assumptions","Summarize: recommendation, why, risks, next steps"] }
   ]},
   { g: "Product sense", items: [
-    { id: "c-circles", name: "CIRCLES (product design)", what: "Lewis Lin's framework from Decode and Conquer. Use it as a checklist, not a script.", list: ["Comprehend the situation (what, who, why, constraints)","Identify the customer (segments, then pick one)","Report the customer's needs (pain points, use cases)","Cut through prioritization (pick the top pain)","List solutions (3 to 5, at least one bold)","Evaluate trade-offs","Summarize and add metrics"], ex: "Timing for a 30 to 35 min case: clarify 3, users 5, pains 5, solutions 8, prioritize 4, metrics 4, summary 2." },
-    { id: "c-segment", name: "User segmentation", what: "Split users by something that changes their needs: behaviour, goal, context, life stage, or tech comfort. Demographics alone (age, gender) are weak unless they change the need.", ex: "For a food app: office lunch orderers, late-night students, families ordering on weekends. Each has a different pain." },
-    { id: "c-jtbd", name: "Jobs to be done", what: "People 'hire' a product to get a job done in their life. Ask what progress the user is trying to make, not what features they want.", ex: "People don't want a drill, they want a hole in the wall. A parent ordering groceries at 9pm wants tomorrow's breakfast sorted." },
-    { id: "c-pains", name: "Pain points and use cases", what: "Write pain points as the user's problem, not as missing features. Rank them by frequency and severity.", ex: "Weak: 'no filter for veg'. Strong: 'I scroll for 10 minutes and still can't find something light and veg under 200 rupees'." },
-    { id: "c-prior", name: "Prioritization: RICE, impact vs effort, Kano, MoSCoW", what: "Tools to pick what to build.", list: ["RICE: Reach x Impact x Confidence / Effort","Impact vs effort 2x2: do quick wins first","Kano: must-haves, performance features, delighters","MoSCoW: must, should, could, won't"], ex: "In interviews, a simple impact vs effort table for 3 ideas is usually enough." },
-    { id: "c-mvp", name: "MVP and iteration", what: "The smallest version that tests your riskiest assumption. Say what you'd learn from it and what V2 looks like.", ex: "For a car-pool app, an MVP could be a WhatsApp group for one tech park before any app is built." },
-    { id: "c-teardown", name: "Product teardown", what: "A structured look at a real product: users, core job, key flows, business model, what works, what doesn't, one improvement with a metric. Some startups ask for this as a take-home.", ex: "Do one teardown a day this week. It builds your product vocabulary fast." }
+    { id: "c-circles", name: "CIRCLES", ref: ["iima", 23], what: "Comprehend, Identify customers, Report needs, Cut through prioritization, List solutions, Evaluate trade-offs, Summarize. A checklist, not a script.", ex: "Timing for 30 minutes: clarify 3, users 5, pains 5, solutions 8, prioritize 4, metrics 3, summary 2." },
+    { id: "c-persona", name: "Personas, JTBD, journey maps", ref: ["iima", 13], what: "Segment users by needs and context, not demographics alone. Jobs to be done asks what progress the user wants. Journey maps show where the pain sits." },
+    { id: "c-prior", name: "Prioritization: RICE, value vs effort, Kano, MoSCoW, ICE", ref: ["iima", 26], what: "Tools to pick what to build. In an interview, a small value vs effort table for 3 ideas is usually enough." },
+    { id: "c-mvp", name: "PRD, MVP, user stories", ref: ["iima", 17], what: "A PRD states problem, users, goals, requirements, metrics. An MVP tests your riskiest assumption. User story: As a [user], I want [action] so that [benefit]." },
+    { id: "c-market", name: "Marketplaces (for Swiggy)", ref: ["iima", 111], what: "Swiggy is a three-sided marketplace: customers, restaurants and stores, delivery partners. Every change helps one side and costs another. Always say which side you optimize and what you protect.", ex: "Contribution per order = commission + delivery fee + ads - rider cost - discounts." }
   ]},
   { g: "Metrics & analytics", items: [
-    { id: "c-nsm", name: "North star metric", what: "One metric that captures the value users get and predicts long-term business success. Supported by a few input metrics the team can move.", ex: "Airbnb: nights booked. Spotify: time spent listening. WhatsApp: messages sent by daily users." },
-    { id: "c-aarrr", name: "AARRR (pirate metrics)", what: "A funnel for thinking about a product's growth.", list: ["Acquisition: how users arrive","Activation: first moment of value","Retention: do they come back","Referral: do they bring others","Revenue: do they pay"] },
-    { id: "c-heart", name: "HEART (Google)", what: "For measuring user experience: Happiness, Engagement, Adoption, Retention, Task success. Pair each with a goal, a signal and a metric.", ex: "Useful for design or improvement cases where the question is 'is the experience better?'" },
-    { id: "c-guard", name: "Input, output and guardrail metrics", what: "Output metrics are results (revenue, retention). Input metrics are levers the team controls (restaurants onboarded, delivery time). Guardrails are metrics that must not get worse while you chase the goal.", ex: "Pushing more notifications may raise DAU (output) but hurt uninstalls (guardrail)." },
-    { id: "c-retention", name: "Funnels, retention and cohorts", what: "A funnel shows where users drop between steps. A cohort groups users by start week so you can compare retention curves over time. A flattening curve means product-market fit for that group.", ex: "Stickiness = DAU / MAU. 50%+ is strong for social, 10 to 20% is normal for many utilities." },
-    { id: "c-unit", name: "Business metrics", what: "LTV (lifetime value), CAC (cost to acquire a customer), LTV/CAC ratio (3 or more is healthy), ARPU, gross margin, take rate for marketplaces, GMV, AOV (average order value), contribution margin per order.", ex: "Quick commerce debates are really about contribution margin per order." },
-    { id: "c-ab", name: "A/B testing basics", what: "Randomly split users, change one thing, compare. Know these words: hypothesis, control, variant, primary metric, statistical significance, sample size, test duration (at least one full week), novelty effect, network effects that break randomization.", ex: "Marketplaces often test by city or time slot because riders and customers affect each other." }
+    { id: "c-nsm", name: "North star, HEART, AARRR", ref: ["iima", 43], what: "North star: the one metric that captures value delivered. HEART: happiness, engagement, adoption, retention, task success. AARRR: acquisition, activation, retention, referral, revenue." },
+    { id: "c-guard", name: "Counter metrics and guardrails", ref: ["iima", 49], what: "Metrics that must not get worse while you chase the goal (cancellations, payment success rate, complaints)." },
+    { id: "c-ab", name: "A/B tests and evals", ref: ["iima", 54], what: "Hypothesis, control vs variant, primary metric, significance, a full-week duration, novelty effect. Marketplaces often test by city or time slot." },
+    { id: "c-pr", name: "Precision, recall, thresholds", ref: ["iima", 57], what: "Precision: of what we flagged, how much was right. Recall: of what was there, how much we caught. Fraud detection lives on this trade-off (Juspay)." }
   ]},
-  { g: "Root cause analysis", items: [
-    { id: "c-rca", name: "RCA playbook", what: "A step-by-step way to find why a metric moved.", list: ["Clarify: exact metric definition, how much, since when, sudden or gradual","Check data: is it a tracking or logging bug?","Internal factors: releases, pricing, marketing, outages, policy changes","External factors: competitors, seasonality, festivals, weather, regulation, news","Segment: platform, app version, geography, new vs existing users, user type","Break the metric into parts or funnel steps and find the broken one","Form 1 to 2 hypotheses, say how you'd confirm them, propose a fix"], ex: "Ask early: is it only us, or is the whole industry down? That splits internal from external." },
-    { id: "c-tree", name: "Metric decomposition (issue trees)", what: "Break a metric into a formula of smaller parts, then check each part.", ex: "Revenue = users x orders per user x average order value. Delivery time = prep + assignment + pickup wait + travel." }
+  { g: "RCA & guesstimates", items: [
+    { id: "c-rca", name: "RCA playbook", ref: ["sigma", 63], what: "Find why a metric moved.", list: ["Clarify the metric, size, time, sudden or gradual","Check data and tracking","Internal: releases, pricing, ops, outages","External: competitors, seasonality, weather, regulation, partner downtime","Segment: platform, version, geo, user type, payment method","Walk the funnel or break the metric into a formula","Form hypotheses, validate, fix"] },
+    { id: "c-guess", name: "Guesstimate playbook", ref: ["iima", 202], what: "Clarify scope, pick top-down or bottom-up, segment, round, calculate, sense-check with a second method, give a range. Rough anchors below; check the latest figures.", list: ["India population ~1.45B, households ~320M","Internet users ~900M, smartphone users ~650M","Urban share ~35%","UPI ~20B transactions a month (2025)"] }
   ]},
-  { g: "Guesstimates", items: [
-    { id: "c-guess", name: "Guesstimate playbook", what: "Interviewers care about logic and sense-checks, not the exact number.", list: ["Clarify: geography, time period, what counts","Pick an approach: top-down (population) or bottom-up (supply, like number of shops)","Segment where it matters: urban vs rural, age, income","Use round numbers and write every step","Calculate, then sense-check with a second method","State the answer as a range and name the most sensitive assumption"] },
-    { id: "c-anchors", name: "India number anchors", what: "Round figures for estimation. They are approximations; check the latest data before an interview.", table: [["Population","~1.45 billion"],["Households (about 4.5 people each)","~320 million"],["Urban share","~35%"],["Age 0 to 14 / 15 to 64 / 65+","~25% / ~68% / ~7%"],["Internet users","~900 million"],["Smartphone users","~650 million"],["UPI transactions per month (2025)","~20 billion"],["Life expectancy","~70 years"],["Mumbai / Delhi NCR / Bengaluru metro","~21M / ~33M / ~14M"]] }
+  { g: "Payments (for Juspay)", items: [
+    { id: "c-pay", name: "Payments 101", ref: ["iima", 150], what: "Customer, merchant, payment gateway or aggregator, acquiring bank, card network or NPCI (UPI), issuing bank. Know MDR, settlement, refunds, chargebacks, 3DS/OTP, tokenization, recurring mandates (UPI Autopay, e-mandates).", ex: "Success rate = successful payments / attempts. It drops with bank downtime, OTP failures, timeouts and strict fraud rules." },
+    { id: "c-upi", name: "How UPI works", what: "The payer app (TPAP) talks to its PSP bank, which sends the request to NPCI's switch; NPCI gets the issuer bank to debit and the payee's bank to credit, then confirms back. The VPA is the address. Intent and collect are the two flows.", ex: "Common failures: wrong PIN, bank downtime, timeouts, debit without credit (reversed later)." },
+    { id: "c-orch", name: "Payment orchestration and Juspay's products", what: "Orchestration routes each payment across several gateways to raise success rates and cut cost. Juspay's lines include Express Checkout / HyperSDK (checkout), Hyperswitch (open-source payments switch), a UPI stack for banks, and Smart Gateway with HDFC Bank.", ex: "Check Juspay's site before interviews, since product names change." }
   ]},
-  { g: "Strategy & business", items: [
-    { id: "c-3c", name: "3Cs and SWOT", what: "3Cs: Company (strengths, goals), Customers (who, needs), Competitors (who, their edge). SWOT adds opportunities and threats. Use them to structure strategy cases quickly.", ex: "Should Netflix push an ad tier in India? Customers are price-sensitive, a competitor bundles cricket, Netflix has premium content." },
-    { id: "c-entry", name: "Market entry and build vs buy vs partner", what: "Market entry: size of market, growth, competition, our right to win, go-to-market, economics, risks. Build vs buy vs partner: speed, cost, control, strategic importance.", ex: "Flipkart bought Myntra for speed in fashion. Swiggy built Instamart on its existing rider network." },
-    { id: "c-models", name: "Business models", what: "How products make money.", list: ["Subscription (Netflix, Spotify)","Advertising (Instagram, YouTube)","Marketplace take rate (Swiggy, Uber)","Freemium (Canva, Zoom)","Transaction fees (Razorpay)","Lending and financial products (CRED, Paytm)"] },
-    { id: "c-moats", name: "Network effects and moats", what: "Network effects: the product gets better as more people use it (WhatsApp, Uber). Other moats: brand, switching costs, data, scale economics, regulation.", ex: "Asking 'what is the moat?' is a good way to judge any strategy answer." },
-    { id: "c-gtm", name: "Go-to-market and pricing", what: "Who you launch to first, through which channels, at what price. Pricing approaches: cost-plus, competitor-based, value-based. In India, price sensitivity and trust usually dominate." }
-  ]},
-  { g: "Execution", items: [
-    { id: "c-tradeoff", name: "Making trade-off calls", what: "State the options, the goal, the evidence, and the risk of each. Then decide. Interviewers mark down answers that list trade-offs but never choose.", ex: "'I'd ship to 20% of users with a fix for the support issue, because the conversion gain is large and the ticket cause is known.'" },
-    { id: "c-sdlc", name: "How products get built", what: "Discovery, PRD (problem, users, goals, requirements, metrics), design, engineering in sprints (agile / scrum), QA, staged rollout, launch, measure, iterate. Know what a user story, backlog, sprint and standup are.", ex: "Write one short PRD this week for any case you practised." },
-    { id: "c-stake", name: "Stakeholder management", what: "Engineering, design, data, marketing, sales, legal, ops. Align on the goal first, share context early, disagree with data, write decisions down." }
-  ]},
-  { g: "Technical basics", items: [
-    { id: "c-web", name: "How the web and apps work", what: "Client (app or browser) talks to servers over the internet using HTTP. Servers run code and read or write databases. CDNs cache content close to users. Latency is the wait time; it usually matters more to users than you'd think." },
-    { id: "c-api", name: "APIs, databases and SQL", what: "An API is a contract that lets one system ask another for data or actions. SQL databases store tables with relations; NoSQL stores flexible documents or key-values. Learn basic SQL: SELECT, WHERE, GROUP BY, JOIN, ORDER BY." },
-    { id: "c-ml", name: "Machine learning basics", what: "Models learn patterns from data to predict. Know: training vs inference, classification vs regression, precision vs recall, overfitting, recommendation systems, cold start." }
-  ]},
-  { g: "AI product sense", items: [
-    { id: "c-llm", name: "How LLM products work", what: "A large language model predicts text. Products add a prompt, context (often from your own data via RAG), tools the model can call, and a UI. Key limits: hallucinations, cost per query, latency, privacy.", list: ["Prompting: instructions and examples","RAG: fetch relevant documents, then answer from them","Fine-tuning: further training for a style or task","Agents: models that plan and call tools in steps"] },
-    { id: "c-evals", name: "Evaluating AI features", what: "You can't ship on vibes. Build an eval set of real examples, define what a good answer is, track accuracy, harmful outputs, latency and cost, and keep humans in the loop where errors are costly.", ex: "In a case, always ask: what happens when the model is wrong, and how will the user know?" },
-    { id: "c-aisafety", name: "Responsible AI trade-offs", what: "More capability often means more risk. Flag privacy, bias, safety and misuse before the interviewer does. Offer mitigations: limits, review, transparency, opt-outs." }
+  { g: "Technical & AI", items: [
+    { id: "c-web", name: "Web, APIs, databases, SQL", ref: ["iima", 139], what: "Clients talk to servers over HTTP through APIs; servers read and write databases. Learn SELECT, WHERE, GROUP BY, JOIN and window functions (ROW_NUMBER, RANK)." },
+    { id: "c-llm", name: "LLMs, RAG, agents", ref: ["iima", 115], what: "Prompts, retrieval over your own data (RAG), fine-tuning, tool use and agents. Limits: hallucination, cost per task, latency, privacy." },
+    { id: "c-evals", name: "AI guardrails, human-in-the-loop, cost per task", ref: ["iima", 59], what: "Eval sets, launch thresholds, fallbacks when the model is wrong, human review where errors are costly, and the cost of each task." }
   ]},
   { g: "Behavioral", items: [
-    { id: "c-star", name: "STAR method", what: "Situation (brief), Task (your job), Action (most of the time, what you did, using 'I'), Result (numbers, what changed, what you learned). Keep each story to about 2 minutes.", ex: "Freshers can use college projects, internships, clubs, fests, startups, even family businesses." },
-    { id: "c-bank", name: "Story bank", what: "Prepare 6 to 8 stories and map each to several themes, so one story can answer many questions.", list: ["Leadership without authority","Conflict","Failure","Data-driven decision","Ambiguity","Customer focus","Prioritization / saying no","Receiving feedback"] },
-    { id: "c-tmay", name: "Tell me about yourself and Why PM", what: "Present, past, future in 90 seconds. Your Why PM needs a real moment (you noticed a user problem and did something about it), not 'I like tech and business'." }
+    { id: "c-star", name: "STAR and a story bank", what: "Situation, Task, Action (most of the time, told with 'I'), Result with numbers. Prepare 6 to 8 stories and map each to themes: leading without authority, conflict, failure, a data decision, ambiguity, customer focus, prioritization, feedback." },
+    { id: "c-why", name: "Why PM, why Juspay, why Swiggy", what: "Each needs a real moment and specific knowledge of the company's product. Juspay asks for an SOP upfront, so write it early." }
   ]}
 ];
 
+/* ============ Schedule ============ */
+const cb = id => "cb:" + id;
+const rd = (book, page, text) => ({ t: text, ref: [book, page] });
 const DAYS = [
-  { id: "d1", n: 1, phase: 1, title: "How PM interviews work + product sense", hours: "6 to 7 hrs",
-    focus: "Understand the job and the rounds, then learn the product design playbook and run your first cases out loud.",
-    learn: ["Read what an APM actually does day to day (discovery, specs, working with engineering and design, launches). 30 min", "Concepts: The APM / PM-1 loop, What interviewers score, How to run any case. 45 min", "Concepts: CIRCLES, User segmentation, Jobs to be done, Pain points. 90 min", "Concepts: Prioritization frameworks and MVP. 45 min", "Watch 2 mock product design interviews (Aced / Exponent or YouTube) and note the structure. 60 min"],
-    practice: ["pd9","pd1","fp1","pi4"],
+  { id: "d1", n: 1, phase: 1, title: "How PM interviews work + product design", hours: "6 to 7 hrs",
+    focus: "Understand the rounds, learn the design playbook from both casebooks, and run your first cases out loud.",
+    learn: [rd("iima", 7, "IIMA: What is product management (pp. 7 to 8). 20 min"), "Concepts tab: The APM loop in India, How to run any case. 30 min", rd("sigma", 8, "Sigma: Product design approach (pp. 8 to 9). 30 min"), rd("iima", 205, "IIMA: Product design do's and don'ts (from p. 205). 30 min"), rd("iima", 13, "IIMA: personas, JTBD, CIRCLES, prioritization (pp. 13 to 40). 90 min")],
+    practice: [cb("sg-10"), cb("sg-11"), cb("ia-272"), "i1", "d1"],
     output: ["Draft your 90-second 'Tell me about yourself'.", "Write teardowns of 2 apps you use daily (users, core job, what works, one fix, one metric)."],
-    tip: "Say every practice answer out loud, and time it. Reading answers feels like progress but doesn't build the skill." },
-  { id: "d2", n: 2, phase: 1, title: "Metrics, root cause analysis and guesstimates", hours: "6 to 7 hrs",
-    focus: "The analytical side. By tonight you should be able to pick a north star, debug a metric drop, and estimate a number with clean logic.",
-    learn: ["Concepts: North star, AARRR, HEART, Input/output/guardrail metrics. 90 min", "Concepts: Funnels and cohorts, Business metrics, A/B testing basics. 60 min", "Concepts: RCA playbook and Metric decomposition. 60 min", "Concepts: Guesstimate playbook. Memorize the India number anchors. 45 min"],
-    practice: ["me1","me2","rca1","rca5","gs2","gs4"],
-    output: ["Make a one-page cheat sheet: typical north star and guardrails for a marketplace, a social app, a fintech app and a SaaS tool.", "Write your RCA checklist from memory on one page."],
-    tip: "For RCA, always ask 'sudden or gradual?' and 'only us or the whole market?' in the first minute." },
-  { id: "d3", n: 3, phase: 1, title: "Strategy, tech, AI and your stories", hours: "6 to 7 hrs",
-    focus: "Cover the remaining breadth and prepare your behavioral material so mentor sessions can focus on cases.",
-    learn: ["Concepts: 3Cs and SWOT, Market entry, Business models, Network effects. 75 min", "Concepts: How the web works, APIs and SQL, ML basics. 60 min", "Concepts: How LLM products work, Evaluating AI features, Responsible AI. 60 min", "Concepts: STAR, Story bank, Why PM. 45 min"],
-    practice: ["st1","pi6","te1","ai2","bh2"],
-    output: ["Write 6 STAR stories and map each to 2 or 3 themes.", "Record yourself doing one full product design case (pd4) in 30 minutes. Watch it back and note 3 fixes.", "List your 3 weakest areas to bring to your first mentor session."],
-    tip: "Only have 2 days? Do Day 3's concept reading in the evenings of Days 1 and 2, and move its practice into Day 4." },
-
+    tip: "Say every practice answer out loud and time it. Read the casebook solution only after you've attempted the case, then rate yourself." },
+  { id: "d2", n: 2, phase: 1, title: "RCA, metrics and guesstimates", hours: "6 to 7 hrs",
+    focus: "The analytical round. RCA is the most reported question type in Indian APM loops, including at Swiggy and Juspay.",
+    learn: [rd("sigma", 62, "Sigma: RCA approach and framework (pp. 62 to 63). 30 min"), rd("iima", 231, "IIMA: Intro to RCA (pp. 231 to 233). 30 min"), rd("iima", 41, "IIMA: Metrics, HEART, AARRR, North Star, guardrails (pp. 41 to 49). 60 min"), rd("iima", 202, "IIMA: Guesstimate tips (pp. 202 to 204). 30 min"), rd("sigma", 159, "Sigma: Guesstimate datasheet (p. 159). Memorize it. 20 min")],
+    practice: [cb("sg-64"), cb("sg-65"), "r1", "sw1", "g1", cb("sg-136"), cb("ia-291")],
+    output: ["Write a one-page RCA checklist from memory.", "Make a one-page metrics cheat sheet: north star and guardrails for a food marketplace, a payments product and a social app."],
+    tip: "In RCA, ask 'sudden or gradual?' and 'only us or the whole market?' in the first minute." },
+  { id: "d3", n: 3, phase: 1, title: "Strategy, payments, AI and your stories", hours: "6 to 7 hrs",
+    focus: "Cover the rest of the breadth, including the two sectors your target companies work in, and write your behavioral material.",
+    learn: [rd("iima", 212, "IIMA: Go-to-market and pricing (pp. 212 to 230). 60 min"), rd("iima", 150, "IIMA: FinTech sector primer (pp. 150 to 155). 30 min"), rd("iima", 160, "IIMA: Food tech (pp. 160 to 163) and Quick commerce (pp. 146 to 149). 40 min"), rd("iima", 115, "IIMA: LLMs, RAG, agentic AI (pp. 115 to 133). 45 min"), "Concepts tab: Payments 101, How UPI works, Payment orchestration. 30 min"],
+    practice: [cb("ia-280"), cb("sg-92"), "a5", cb("ia-293"), "jp3", "sw26"],
+    output: ["Write 6 STAR stories and map each to 2 or 3 themes.", "Write your Juspay SOP answer (why Juspay, why PM) in under 200 words.", "List your 3 weakest areas for your first mentor session."],
+    tip: "Only have 2 days? Read Day 3's material in the evenings of Days 1 and 2, and move its practice to Day 4." },
   { id: "d4", n: 4, phase: 2, title: "Product design, going deep", hours: "5 to 6 hrs + mentor mock",
-    focus: "Harder design prompts: accessibility, two-sided users, India-specific users. Practise going broad on users then narrowing hard.",
-    learn: ["Re-read CIRCLES timing. Practise stating your structure in under 30 seconds.", "Study 2 strong sample answers and list what made them strong."],
-    practice: ["pd2","pd3","pd5","pd14","pd6"],
-    output: ["Mentor mock: one product design case. Log the feedback in the question's notes.", "One teardown (any app)."] },
+    focus: "Harder design prompts with India-specific users and real company prompts.",
+    learn: ["Re-read your Day 1 notes. Practise stating your structure in under 30 seconds."],
+    practice: [cb("sg-30"), cb("sg-46"), cb("sg-55"), cb("ia-250"), "d2", "d4", "sw11"],
+    output: ["Mentor mock: one design case. Log feedback in the case's notes and rate it."] },
   { id: "d5", n: 5, phase: 2, title: "Improvement and favorite product", hours: "5 to 6 hrs + mentor mock",
-    focus: "Improving existing products. Start from the product's goal and today's users before suggesting anything.",
-    learn: ["Concept: Product teardown. Compare your favorite product against its closest competitor."],
-    practice: ["pi2","pi3","pi5","pi7","fp2","fp3"],
-    output: ["Mentor mock: one improvement case.", "Polish your favorite product answer to 3 minutes, with a metric and a trade-off."] },
+    focus: "Improve existing products. Start from the product's goal and today's users.",
+    learn: ["Polish your favorite product answer to 3 minutes."],
+    practice: [cb("sg-126"), cb("sg-116"), cb("sg-114"), cb("sg-107"), "sw7", "sw13", "sw18"],
+    output: ["Mentor mock: one improvement case."] },
   { id: "d6", n: 6, phase: 2, title: "Metrics and experimentation", hours: "5 to 6 hrs + mentor mock",
-    focus: "Success metrics, trade-off calls and A/B tests. Practise giving a decision, not a list.",
-    learn: ["Re-read A/B testing basics and Making trade-off calls.", "Build a metric tree for one app you use (north star at top, inputs below)."],
-    practice: ["me3","me4","me6","me7","me9","me12"],
-    output: ["Mentor mock: one metrics case.", "Update your metrics cheat sheet with anything new."] },
-  { id: "d7", n: 7, phase: 2, title: "Root cause analysis and execution", hours: "5 to 6 hrs",
-    focus: "Speed and structure on RCA, plus classic execution questions about priorities and launches.",
-    learn: ["Concepts: How products get built, Stakeholder management."],
-    practice: ["rca3","rca4","rca6","rca7","ex1","ex2","ex5"],
-    output: ["Timed drill: 3 RCA cases, 15 minutes each, back to back.", "Write a one-page PRD for any feature you designed this week."] },
+    focus: "Success metrics, trade-off calls and A/B tests. Always end with a decision.",
+    learn: [rd("iima", 54, "IIMA: A/B testing, evals, precision and recall (pp. 54 to 62). 45 min")],
+    practice: [cb("ia-288"), cb("ia-294"), cb("sg-153"), cb("sg-154"), "sw14", "m1", "jp5", "jpp8"],
+    output: ["Mentor mock: one metrics case."] },
+  { id: "d7", n: 7, phase: 2, title: "RCA day", hours: "5 to 6 hrs",
+    focus: "Speed and structure on the case type you're most likely to face at both companies.",
+    learn: ["Re-read your RCA checklist. Add payment branches (bank, gateway, UPI app, method)."],
+    practice: [cb("sg-67"), cb("sg-82"), cb("sg-86"), cb("ia-309"), cb("ia-313"), "jp7", "jpp1", "sw2", "r6"],
+    output: ["Timed drill: 3 RCA cases, 15 minutes each, back to back."] },
   { id: "d8", n: 8, phase: 2, title: "Guesstimates and strategy", hours: "5 to 6 hrs + mentor mock",
-    focus: "Clean estimation and business judgement. Always end with a recommendation.",
-    learn: ["Re-check India anchors from memory.", "Read 2 recent business news stories about Indian tech companies and explain the strategy behind each."],
-    practice: ["gs1","gs3","gs5","gs7","gs10","st2","st3","st7"],
+    focus: "Clean estimation, then chain it into a growth or strategy question the way Swiggy does.",
+    learn: ["Re-check India anchors from memory."],
+    practice: [cb("sg-142"), "sw3", "jp4", cb("ia-240"), "g3", cb("sg-140"), "sw5", cb("sg-151")],
     output: ["Mentor mock: one guesstimate plus one strategy question."] },
-  { id: "d9", n: 9, phase: 2, title: "Technical and AI product sense", hours: "5 to 6 hrs + mentor mock",
-    focus: "Talk comfortably with engineers, and handle AI cases where the model is sometimes wrong.",
-    learn: ["Practise 5 basic SQL queries (SELECT, WHERE, GROUP BY, JOIN).", "Read one AI product sense guide (see Resources)."],
-    practice: ["te2","te3","te6","te7","ai1","ai3","ai4","ai6"],
-    output: ["Mentor mock: one AI product case."] },
-  { id: "d10", n: 10, phase: 2, title: "Behavioral and a full mock loop", hours: "6 hrs",
-    focus: "Put it together. Simulate a real interview day and close gaps.",
-    learn: ["Research your target companies: their products, recent launches, business model."],
-    practice: ["bh1","bh3","bh4","bh5","bh6","bh7","bh8","bh15"],
-    output: ["Full mock loop: product sense, analytical, behavioral, back to back with short breaks.", "Go through everything flagged 'Revisit' and redo the 3 weakest.", "Write down your 1-page personal playbook for interview day."] }
+  { id: "d9", n: 9, phase: 2, title: "Payments, data, tech and AI", hours: "5 to 6 hrs + mentor mock",
+    focus: "Juspay's round types (data problem, fraud, UPI flows, possible coding) and AI product sense.",
+    learn: ["Practise 5 SQL queries on an orders table.", "Do one data problem: take a public CSV, find 3 insights, write a recommendation (like Juspay's live data round)."],
+    practice: ["jpp7", "jp8", "jp6", "jpp3", "sw17", "a1", "a3", "a4", cb("ia-267")],
+    output: ["Mentor mock: one AI or payments case.", "If your Juspay loop may include coding, spend 60 minutes on basics (arrays, maps, a simple tree)."] },
+  { id: "d10", n: 10, phase: 2, title: "Company day + full mock loop", hours: "6 hrs",
+    focus: "Put it together for Juspay and Swiggy.",
+    learn: ["Use Swiggy, Instamart and a Juspay-powered checkout. Note 3 observations each."],
+    practice: ["jp12", "jp1", "jp2", "sw10", "sw12", "b1", "b2", "b3", "b7"],
+    output: ["Full mock loop: design, RCA, behavioral, back to back.", "Redo every case rated 1 or 2 stars.", "Write a one-page personal playbook for interview day."] }
 ];
 
-const RESOURCES = [
-  { name: "Decode and Conquer, Lewis Lin", why: "The source of CIRCLES. Short, full of sample answers. Read the product design chapters first.", url: "" },
-  { name: "Cracking the PM Interview, Gayle McDowell and Jackie Bavaro", why: "Broad overview of the role, resumes and interview types. Good for freshers.", url: "" },
-  { name: "Aced (formerly Exponent): top PM interview questions", why: "Question lists and mock interview videos across companies.", url: "https://www.tryexponent.com/blog/top-product-manager-interview-questions" },
-  { name: "Aced: product sense interview guide", why: "How product sense rounds are graded.", url: "https://www.tryexponent.com/blog/product-sense-interview" },
-  { name: "Aced: Google APM interview guide", why: "What a structured APM loop looks like end to end.", url: "https://www.tryexponent.com/guides/google-associate-product-manager-interview" },
-  { name: "IGotAnOffer: estimation questions for PMs", why: "Step-by-step guesstimate method with worked examples.", url: "https://igotanoffer.com/blogs/product-manager/estimation-interview-questions" },
-  { name: "HelloPM: approaching RCA questions", why: "RCA method with Indian examples.", url: "https://hellopm.co/how-to-approach-rca-questions/" },
-  { name: "Aakash Gupta: AI product sense interview guide", why: "How AI product cases are asked and judged.", url: "https://www.news.aakashg.com/p/ai-product-sense-guide" },
-  { name: "Northeastern: AI PM interview questions (2026)", why: "Recent list of AI-focused PM questions.", url: "https://careers.northeastern.edu/blog/2026/06/11/ai-product-manager-interview-questions-2026-guide/" },
-  { name: "Product Alliance: Google APM cheat sheet", why: "Compact summary of what's tested.", url: "https://www.productalliance.com/guides/google-apm-interview-cheat-sheet" }
-];
-
-/* ---------------- State ---------------- */
-const QMAP = Object.fromEntries(Q.map(q => [q[0], { id: q[0], cat: q[1], text: q[2], lvl: q[3], hint: q[4] }]));
-const LVL = { E: "Easy", M: "Medium", H: "Hard" };
+/* ============ State ============ */
+const QMAP = Object.fromEntries(Q.map(q => [q[0], { id: q[0], type: q[1], co: q[2], text: q[3], src: q[4], badge: q[5], hint: q[6] }]));
+const CMAP = Object.fromEntries(CASES.map(c => [c.id, c]));
 const ALL_CONCEPTS = CONCEPTS.flatMap(g => g.items);
-let state = { done: {}, flag: {}, notes: {}, start: null };
-const ui = { tab: "plan", cat: "all", status: "all", search: "", open: new Set(), openDays: null };
-const LS_KEY = "productprep-tracker-v1";
-
+let state = { done: {}, flag: {}, notes: {}, rate: {}, start: null };
+const ui = { tab: "plan", type: "all", co: "all", status: "all", search: "", open: new Set(), openDays: null, focusCo: "Juspay", cbBook: "all", cbSeg: "all", cbStatus: "all", cbSearch: "" };
+const LS_KEY = "productprep-tracker-v2";
 try { const s = JSON.parse(localStorage.getItem(LS_KEY) || "null"); if (s) state = Object.assign(state, s); } catch (e) {}
-const initialHash = (location.hash || "").slice(1);
-if (["plan","bank","concepts","resources"].includes(initialHash)) ui.tab = initialHash;
+state.rate = state.rate || {};
+const TABS = ["plan", "bank", "focus", "cases", "concepts", "sources"];
+const h0 = (location.hash || "").slice(1); if (TABS.includes(h0)) ui.tab = h0;
 
 function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} }
-
 let dbRef = null, saveTimer = null, writing = false, dirty = false;
-function queueSave() {
-  saveLocal();
-  if (!dbRef) return;
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(flush, 700);
-}
+function queueSave() { saveLocal(); if (!dbRef) return; clearTimeout(saveTimer); saveTimer = setTimeout(flush, 700); }
 async function flush() {
   if (!dbRef) return;
   if (writing) { dirty = true; return; }
-  writing = true; dirty = false;
-  setSync("Saving…");
+  writing = true; dirty = false; setSync("Saving…");
   try { await dbRef.set(JSON.parse(JSON.stringify(state))); setSync("Saved to your tracker"); }
-  catch (e) { setSync(e && e.code === "invalid_argument" ? "Read-only view: progress saves on this device only" : "Couldn't save just now. Your progress is kept on this device."); }
-  writing = false;
-  if (dirty) flush();
+  catch (e) { setSync(e && e.code === "invalid_argument" ? "Read-only view: progress saves on this device only" : "Couldn't save just now. Progress is kept on this device."); }
+  writing = false; if (dirty) flush();
 }
 function setSync(t) { const el = document.getElementById("sync"); if (el) el.textContent = t; }
-
 (async () => {
   let db = null;
   try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch (e) { db = null; }
-  if (!db) { setSync("Saving on this device"); return; }
+  if (!db) return;
   dbRef = db.doc("tracker/state");
   let first = true;
   dbRef.onSnapshot(snap => {
     if (snap.metadata.hasPendingWrites) return;
     if (snap.exists) {
-      const remote = JSON.parse(JSON.stringify(snap.data()));
-      const merged = { done: remote.done || {}, flag: remote.flag || {}, notes: remote.notes || {}, start: remote.start || null };
-      if (first && !snap.metadata.fromCache) first = false;
+      const r = JSON.parse(JSON.stringify(snap.data()));
+      const merged = { done: r.done || {}, flag: r.flag || {}, notes: r.notes || {}, rate: r.rate || {}, start: r.start || null };
+      if (!snap.metadata.fromCache) first = false;
       if (JSON.stringify(merged) !== JSON.stringify(state)) {
-        if (document.activeElement && document.activeElement.classList.contains("note")) return;
-        state = merged; saveLocal(); render();
+        const a = document.activeElement; if (a && a.classList && a.classList.contains("note")) return;
+        state = merged; saveLocal(); render(); if (viewer.open) renderViewerSide();
       }
       setSync("Synced to your tracker");
-    } else if (!snap.metadata.fromCache && first) {
-      first = false;
-      queueSave();
-    }
+    } else if (!snap.metadata.fromCache && first) { first = false; queueSave(); }
   }, () => setSync("Sync paused. Progress is kept on this device."));
 })();
 
-/* ---------------- Helpers ---------------- */
+/* ============ Helpers ============ */
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const taskIds = d => [...d.learn.map((_, i) => `${d.id}-l${i}`), ...d.output.map((_, i) => `${d.id}-o${i}`)];
-const dayItems = d => [...taskIds(d), ...d.practice];
+const itemKey = p => p.startsWith("cb:") ? p.slice(3) : p;
+const dayItems = d => [...taskIds(d), ...d.practice.map(itemKey)];
 const countDone = ids => ids.filter(id => state.done[id]).length;
+function todayIndex() { if (!state.start) return null; const s = new Date(state.start + "T00:00:00"); const n = new Date(); n.setHours(0,0,0,0); return Math.floor((n - s) / 86400000) + 1; }
+function dayDate(n) { if (!state.start) return ""; const d = new Date(state.start + "T00:00:00"); d.setDate(d.getDate() + n - 1); return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }); }
+const starStr = r => `<span class="stars" aria-label="${r ? r + " of 5" : "not rated"}">${[1,2,3,4,5].map(i => i <= (r || 0) ? "★" : '<span class="off">★</span>').join("")}</span>`;
+const srcLink = k => { const s = SRC[k]; if (!s) return ""; return `<a href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])}</a>`; };
 
-function todayIndex() {
-  if (!state.start) return null;
-  const s = new Date(state.start + "T00:00:00");
-  const now = new Date(); now.setHours(0, 0, 0, 0);
-  return Math.floor((now - s) / 86400000) + 1;
-}
-function dayDate(n) {
-  if (!state.start) return "";
-  const d = new Date(state.start + "T00:00:00"); d.setDate(d.getDate() + n - 1);
-  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
-}
-
-/* ---------------- Render ---------------- */
+/* ============ Render ============ */
 function renderStats() {
   const allTasks = DAYS.flatMap(taskIds);
-  const tDone = countDone(allTasks);
-  const qDone = countDone(Q.map(q => q[0]));
-  const cDone = countDone(ALL_CONCEPTS.map(c => c.id));
-  const flags = Object.keys(state.flag).filter(k => state.flag[k]).length;
+  const tDone = countDone(allTasks), qDone = countDone(Q.map(q => q[0])), cDone = countDone(ALL_CONCEPTS.map(c => c.id));
+  const casesDone = CASES.filter(c => state.done[c.id]).length;
+  const rated = CASES.map(c => state.rate[c.id]).filter(Boolean);
+  const avg = rated.length ? (rated.reduce((a, b) => a + b, 0) / rated.length).toFixed(1) : "none yet";
   const ti = todayIndex();
-  const dayLabel = ti == null ? "Not started" : ti < 1 ? `Starts in ${1 - ti}d` : ti > 10 ? "Plan finished" : `Day ${ti}`;
+  const dayLabel = ti == null ? "Not started" : ti < 1 ? `Starts in ${1 - ti}d` : ti > 10 ? "Plan done" : `Day ${ti}`;
   const pct = (a, b) => Math.round(a / b * 100);
   document.getElementById("stats").innerHTML = `
     <div class="stat"><div class="k">Where you are</div><div class="v">${dayLabel}</div>
-      <label class="sub" for="startDate" style="font-size:12px;color:var(--muted);display:block">Day 1 starts on</label>
-      <input type="date" id="startDate" value="${state.start || ""}"></div>
+      <label for="startDate" class="s" style="display:block">Day 1 starts on</label><input type="date" id="startDate" value="${state.start || ""}"></div>
     <div class="stat"><div class="k">Schedule tasks</div><div class="v">${tDone}<small> / ${allTasks.length}</small></div><div class="bar"><i style="width:${pct(tDone, allTasks.length)}%"></i></div></div>
-    <div class="stat"><div class="k">Questions practised</div><div class="v">${qDone}<small> / ${Q.length}</small></div><div class="bar"><i style="width:${pct(qDone, Q.length)}%"></i></div></div>
-    <div class="stat"><div class="k">Concepts I can explain</div><div class="v">${cDone}<small> / ${ALL_CONCEPTS.length}</small></div><div class="bar"><i style="width:${pct(cDone, ALL_CONCEPTS.length)}%"></i></div>
-      <div class="sub" style="font-size:12px;color:var(--muted);margin-top:4px">${flags} flagged to revisit</div></div>`;
+    <div class="stat"><div class="k">Real questions</div><div class="v">${qDone}<small> / ${Q.length}</small></div><div class="bar"><i style="width:${pct(qDone, Q.length)}%"></i></div></div>
+    <div class="stat"><div class="k">Casebook cases</div><div class="v">${casesDone}<small> / ${CASES.length}</small></div><div class="bar"><i style="width:${pct(casesDone, CASES.length)}%"></i></div><div class="s">Avg rating: ${avg}</div></div>
+    <div class="stat"><div class="k">Concepts</div><div class="v">${cDone}<small> / ${ALL_CONCEPTS.length}</small></div><div class="bar"><i style="width:${pct(cDone, ALL_CONCEPTS.length)}%"></i></div><div class="s">${Object.keys(state.flag).filter(k => state.flag[k]).length} flagged to revisit</div></div>`;
 }
 
 function qRow(id) {
-  const q = QMAP[id]; const cat = CATS.find(c => c.id === q.cat);
-  const done = !!state.done[id], flag = !!state.flag[id], open = ui.open.has(id);
+  const q = QMAP[id]; const t = TYPES.find(x => x.id === q.type);
+  const done = !!state.done[id], flag = !!state.flag[id], open = ui.open.has(id), b = BADGE[q.badge];
   return `<div class="row ${done ? "is-done" : ""}">
     <input type="checkbox" class="check" id="cb-${id}" data-toggle="${id}" ${done ? "checked" : ""} aria-label="Mark practised">
     <div class="txt"><label class="q" for="cb-${id}">${esc(q.text)}</label>
-      <div class="tags"><span class="tag">${esc(cat.name)}</span><span class="tag lvl">${LVL[q.lvl]}</span>${state.notes[id] ? '<span class="tag lvl">has notes</span>' : ""}</div>
+      <div class="tags">${q.co !== "Various" ? `<span class="tag co">${esc(q.co)}</span>` : ""}<span class="tag">${esc(t.name)}</span><span class="tag ${b[1]}" title="${esc(b[2])}">${b[0]}</span>${state.notes[id] ? '<span class="tag plain">notes</span>' : ""}</div>
       ${open ? `<div class="more"><div class="hint"><strong>How to approach:</strong> ${esc(q.hint)}</div>
+        ${q.src ? `<div class="srcl">Source: ${srcLink(q.src)}</div>` : ""}
         <textarea class="note" id="note-${id}" data-note="${id}" placeholder="Your notes, mentor feedback, what to fix next time">${esc(state.notes[id] || "")}</textarea></div>` : ""}
     </div>
-    <div class="actions">
-      <button class="icon-btn" data-expand="${id}" aria-expanded="${open}">${open ? "Hide" : "Hint & notes"}</button>
-      <button class="icon-btn" data-flag="${id}" aria-pressed="${flag}">${flag ? "Revisit" : "Flag"}</button>
-    </div></div>`;
+    <div class="actions"><button class="icon-btn" data-expand="${id}" aria-expanded="${open}">${open ? "Hide" : "Hint & notes"}</button>
+      <button class="icon-btn" data-flag="${id}" aria-pressed="${flag}">${flag ? "Revisit" : "Flag"}</button></div></div>`;
 }
-function taskRow(id, text) {
-  const done = !!state.done[id];
+function caseRow(id) {
+  const c = CMAP[id]; const done = !!state.done[id];
+  return `<div class="row ${done ? "is-done" : ""}">
+    <input type="checkbox" class="check" id="cb-${id}" data-toggle="${id}" ${done ? "checked" : ""} aria-label="Mark case attempted">
+    <div class="txt"><label class="q" for="cb-${id}">${esc(c.name)}</label> <span class="srcl">${esc(c.prompt)}</span>
+      <div class="tags"><span class="tag co">${BOOKS[c.book].short} p.${c.page}</span><span class="tag">${SEGS[c.seg]}</span>${c.lvl ? `<span class="tag plain">${c.lvl}</span>` : ""}${c.asked ? `<span class="tag rep">Asked at ${esc(c.asked)}</span>` : ""}${starStr(state.rate[id])}</div></div>
+    <div class="actions"><button class="icon-btn primary" data-case="${id}">Open case</button></div></div>`;
+}
+function taskRow(id, task) {
+  const done = !!state.done[id]; const text = typeof task === "string" ? task : task.t;
+  const ref = typeof task === "object" && task.ref ? `<button class="icon-btn" data-read="${task.ref[0]}:${task.ref[1]}">Read p.${task.ref[1]}</button>` : "";
   return `<div class="row ${done ? "is-done" : ""}"><input type="checkbox" class="check" id="cb-${id}" data-toggle="${id}" ${done ? "checked" : ""}>
-    <div class="txt"><label class="q" for="cb-${id}" style="font-weight:400">${esc(text)}</label></div><div></div></div>`;
+    <div class="txt"><label class="q" for="cb-${id}" style="font-weight:400">${esc(text)}</label></div><div class="actions">${ref}</div></div>`;
 }
 
 function renderPlan() {
   const ti = todayIndex();
   if (ui.openDays === null) {
     ui.openDays = new Set();
-    const firstOpen = (ti && ti >= 1 && ti <= 10) ? `d${ti}` : (DAYS.find(d => countDone(dayItems(d)) < dayItems(d).length) || DAYS[0]).id;
-    ui.openDays.add(firstOpen);
+    const pick = (ti && ti >= 1 && ti <= 10) ? `d${ti}` : (DAYS.find(d => countDone(dayItems(d)) < dayItems(d).length) || DAYS[0]).id;
+    ui.openDays.add(pick);
   }
-  const phase = (p, title, sub) => `<section class="phase"><h3>${title}</h3>${sub ? `<p style="margin:-4px 0 12px;color:var(--muted);max-width:75ch">${sub}</p>` : ""}${DAYS.filter(d => d.phase === p).map(dayCard).join("")}</section>`;
-  function dayCard(d) {
-    const items = dayItems(d), dn = countDone(items), complete = dn === items.length;
-    const isToday = ti === d.n;
+  const card = d => {
+    const items = dayItems(d), dn = countDone(items), complete = dn === items.length, isToday = ti === d.n;
     return `<details class="day ${isToday ? "today" : ""} ${complete ? "complete" : ""}" data-day="${d.id}" ${ui.openDays.has(d.id) ? "open" : ""}>
-      <summary><div class="daynum">${d.n}</div>
-        <div class="daytitle"><h3>${esc(d.title)}</h3><div class="meta">${state.start ? dayDate(d.n) + " · " : ""}${esc(d.hours)}</div></div>
+      <summary><div class="daynum">${d.n}</div><div class="daytitle"><h3>${esc(d.title)}</h3><div class="meta">${state.start ? dayDate(d.n) + " · " : ""}${esc(d.hours)}</div></div>
         <span class="pill ${isToday ? "today" : complete ? "done" : ""}">${isToday ? "Today · " : ""}${dn}/${items.length}</span></summary>
       <div class="daybody"><p class="focus">${esc(d.focus)}</p>
         <div class="block"><h4>Learn</h4>${d.learn.map((t, i) => taskRow(`${d.id}-l${i}`, t)).join("")}</div>
-        <div class="block"><h4>Practise out loud</h4>${d.practice.map(qRow).join("")}</div>
+        <div class="block"><h4>Practise out loud</h4>${d.practice.map(p => p.startsWith("cb:") ? caseRow(p.slice(3)) : qRow(p)).join("")}</div>
         <div class="block"><h4>Produce</h4>${d.output.map((t, i) => taskRow(`${d.id}-o${i}`, t)).join("")}</div>
-        ${d.tip ? `<div class="tip">${esc(d.tip)}</div>` : ""}
-      </div></details>`;
-  }
-  return `<div class="section-head"><div><h2>Your 10-day plan</h2><p>Days 1 to 3 build breadth on your own so mentor time goes on feedback, not basics. Days 4 to 10 go deep on one area each, with a mock most days. Set your start date above to see dates and today's card.</p></div></div>
-    ${phase(1, "Phase 1 · Breadth on your own (Days 1 to 3)")}
-    ${phase(2, "Phase 2 · Seven days with experienced PMs (Days 4 to 10)", "Each day: a short concept refresh, 5 to 8 practice cases aloud, and one mock with a mentor where marked. Log mentor feedback in each question's notes and flag anything you want to redo.")}
-    <section class="phase"><h3>After day 10</h3><div class="tip">Keep doing 2 cases a day from the question bank, filtered by "Not done" or "Flagged". Rotate categories so nothing gets rusty.</div></section>`;
+        ${d.tip ? `<div class="tip">${esc(d.tip)}</div>` : ""}</div></details>`;
+  };
+  return `<div class="section-head"><h2>Your 10-day plan</h2><p>Days 1 to 3 build breadth on your own using the casebooks' primers. Days 4 to 10 go deep on one case type a day, with a mentor mock most days. Practice mixes reported questions with casebook cases, weighted towards Juspay and Swiggy. Set your start date above to see dates.</p></div>
+    <section class="phase"><h3>Phase 1 · Breadth on your own (Days 1 to 3)</h3>${DAYS.filter(d => d.phase === 1).map(card).join("")}</section>
+    <section class="phase"><h3>Phase 2 · Seven days with experienced PMs (Days 4 to 10)</h3>${DAYS.filter(d => d.phase === 2).map(card).join("")}</section>
+    <section class="phase"><h3>After day 10</h3><div class="tip">Two cases a day: one from the Casebooks tab filtered to "Not attempted", one from Real questions filtered to your target company. Redo anything rated 1 or 2 stars within 3 days.</div></section>`;
 }
 
-function renderBank() {
+function bankFilter(q) {
   const s = ui.search.trim().toLowerCase();
-  const match = q => (ui.cat === "all" || q.cat === ui.cat)
-    && (ui.status === "all" || (ui.status === "todo" && !state.done[q.id]) || (ui.status === "done" && state.done[q.id]) || (ui.status === "flag" && state.flag[q.id]))
-    && (!s || q.text.toLowerCase().includes(s) || q.hint.toLowerCase().includes(s));
-  const chips = [`<button class="chip" data-cat="all" aria-pressed="${ui.cat === "all"}">All<span class="n">${countDone(Q.map(q => q[0]))}/${Q.length}</span></button>`,
-    ...CATS.map(c => { const ids = Q.filter(q => q[1] === c.id).map(q => q[0]); return `<button class="chip" data-cat="${c.id}" aria-pressed="${ui.cat === c.id}">${esc(c.name)}<span class="n">${countDone(ids)}/${ids.length}</span></button>`; })].join("");
-  const groups = CATS.map(c => {
-    const qs = Q.filter(q => q[1] === c.id).map(q => QMAP[q[0]]).filter(match);
-    if (!qs.length) return "";
-    return `<section class="cat"><header><div><h3>${esc(c.name)}</h3><p>${esc(c.blurb)}</p></div></header>${qs.map(q => qRow(q.id)).join("")}</section>`;
+  return (ui.type === "all" || q.type === ui.type)
+    && (ui.co === "all" || q.co === ui.co)
+    && (ui.status === "all" || (ui.status === "todo" && !state.done[q.id]) || (ui.status === "done" && state.done[q.id]) || (ui.status === "flag" && state.flag[q.id]) || (ui.status === "rep" && q.badge === "R"))
+    && (!s || (q.text + " " + q.co + " " + q.hint).toLowerCase().includes(s));
+}
+function renderBank() {
+  const all = Q.map(q => QMAP[q[0]]);
+  const cos = [...new Set(all.map(q => q.co))].sort((a, b) => a === "Various" ? 1 : b === "Various" ? -1 : a.localeCompare(b));
+  const chips = [`<button class="chip" data-type="all" aria-pressed="${ui.type === "all"}">All<span class="n">${countDone(all.map(q => q.id))}/${all.length}</span></button>`,
+    ...TYPES.map(t => { const ids = all.filter(q => q.type === t.id).map(q => q.id); return ids.length ? `<button class="chip" data-type="${t.id}" aria-pressed="${ui.type === t.id}">${esc(t.name)}<span class="n">${countDone(ids)}/${ids.length}</span></button>` : ""; })].join("");
+  const groups = TYPES.map(t => {
+    const qs = all.filter(q => q.type === t.id).filter(bankFilter);
+    return qs.length ? `<section class="cat"><header><h3>${esc(t.name)}</h3><p>${esc(t.blurb)}</p></header>${qs.map(q => qRow(q.id)).join("")}</section>` : "";
   }).join("");
-  return `<div class="section-head"><div><h2>Question bank</h2><p>${Q.length} questions of the kind asked in APM and PM-1 loops, many with an Indian context. Open "Hint & notes" for a starting approach and a place to log mentor feedback.</p></div></div>
+  const nRep = all.filter(q => q.badge === "R").length;
+  return `<div class="section-head"><h2>Real questions</h2><p>${all.length} questions, ${nRep} of them reported as asked. They come from candidate reports (Glassdoor, Grapevine, Medium write-ups), question banks that tag the company (PM Exercises, Aced/Exponent) and interview guides. Open "Hint & notes" to see each source. The casebooks' ${CASES.length} cases have their own tab.</p></div>
+    <div class="legend"><span><span class="tag rep">Reported</span> a candidate or company-tagged bank says it was asked</span><span><span class="tag gd">Guide</span> typical question per a prep guide</span><span><span class="tag plain">Practice</span> written for the company's business, not reported</span></div>
     <div class="filters">${chips}</div>
-    <div class="filters"><input class="search" id="qsearch" type="search" placeholder="Search questions, e.g. Swiggy, churn, UPI" value="${esc(ui.search)}">
-      <select class="status" id="qstatus" aria-label="Filter by status">
-        <option value="all" ${ui.status === "all" ? "selected" : ""}>All statuses</option>
-        <option value="todo" ${ui.status === "todo" ? "selected" : ""}>Not done</option>
-        <option value="done" ${ui.status === "done" ? "selected" : ""}>Done</option>
-        <option value="flag" ${ui.status === "flag" ? "selected" : ""}>Flagged to revisit</option></select></div>
-    <div id="bankList">${groups || '<p class="empty">No questions match these filters.</p>'}</div>`;
+    <div class="filters"><input class="search" id="qsearch" type="search" placeholder="Search: UPI, churn, Instamart…" value="${esc(ui.search)}">
+      <select class="sel" id="qco" aria-label="Company"><option value="all">All companies</option>${cos.map(c => `<option value="${esc(c)}" ${ui.co === c ? "selected" : ""}>${esc(c === "Various" ? "Multiple / general" : c)}</option>`).join("")}</select>
+      <select class="sel" id="qstatus" aria-label="Status">${[["all","All statuses"],["rep","Reported only"],["todo","Not done"],["done","Done"],["flag","Flagged"]].map(o => `<option value="${o[0]}" ${ui.status === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select></div>
+    ${groups || '<p class="srcl">No questions match these filters.</p>'}`;
+}
+
+const FOCUS = {
+  Juspay: {
+    process: ["HR asks you to fill an SOP (statement of purpose) before the first round.", "Round 1 with a product manager: resume, current work, a guesstimate, why Juspay, metrics for adoption.", "Live problem round: you get data to analyse and must reach a conclusion.", "Final round with the VP of Product.", "Some PM loops were longer: about 7 rounds including an onsite coding hackathon in Bengaluru, a take-home, and a 2.5-hour case round with an RCA."],
+    tests: ["Payments depth: UPI, cards, success rates, fraud, routing.", "Comfort with data: reading a dataset and drawing a conclusion.", "Technical fluency. A Grapevine post says Juspay doesn't want 'pure PMs', and some loops test coding.", "A clear 'why Juspay' backed by product knowledge."],
+    prep: ["Payments 101 and How UPI works (Concepts tab).", "Juspay's products: checkout (Express Checkout / HyperSDK), Hyperswitch (open source), UPI stack for banks, Smart Gateway with HDFC.", "SMB merchant pains: integration effort, low success rates, reconciliation, cost.", "Excel or Sheets pivots and basic SQL for the data round.", "Basic coding in one language if your loop includes the hackathon."],
+    srcs: ["gd_jp_apm", "gd_jp_pm", "gv_jp", "gv_jp_code", "bi_jp", "salt_jp", "gd_jp_pta"]
+  },
+  Swiggy: {
+    process: ["APM (Glassdoor): a phone screen, 3 in-person rounds with product, engineering and operations people, 1 case study round, then the VP of Product.", "PM loops described by guides: recruiter call, product sense case (marketplace), analytics or growth case (RCA), behavioral, hiring manager.", "Some candidates reported SQL questions and a quick commerce case study."],
+    tests: ["Three-sided marketplace thinking: customers, restaurants and stores, delivery partners.", "RCA on orders, revenue, delivery time, ratings.", "Guesstimates chained to growth (estimate deliveries per minute, then increase it).", "Unit economics of food delivery and Instamart.", "India constraints: monsoon spikes, rider dropout at peaks, tier-2 restaurant quality."],
+    prep: ["Use Swiggy, Instamart, Dineout and Swiggy One for a week. Note 3 pains each.", "Marketplaces concept, plus the IIMA Food tech (p.160) and Quick commerce (p.146) primers.", "Casebook cases tagged Swiggy: Sigma p.67 (revenue RCA), p.126 (improve), p.142 (orders per hour), p.153 (IPO metrics), IIMA p.280 (table reservation GTM).", "Competitors: Zomato and Blinkit, Zepto, Flipkart Minutes, BB Now, Amazon Now."],
+    srcs: ["gd_sw_apm", "gd_sw_pm", "pmx_sw", "pmx_sw_rca", "exp_sw", "exp_sw_rest", "hs_sw", "df_sw", "htc_sw", "md_sw20", "iq_sw_ba"]
+  }
+};
+function renderFocus() {
+  const co = ui.focusCo, f = FOCUS[co];
+  const qs = Q.map(q => QMAP[q[0]]).filter(q => q.co === co);
+  const rep = qs.filter(q => q.badge !== "P"), prac = qs.filter(q => q.badge === "P");
+  const cases = CASES.filter(c => c.asked === co);
+  const list = a => `<ul>${a.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
+  return `<div class="section-head"><h2>Juspay &amp; Swiggy</h2><p>Only what's been reported for PM and APM roles at these two companies, plus prep that follows from it. Ticks here also count in the Real questions tab.</p></div>
+    <div class="cotabs">${["Juspay", "Swiggy"].map(c => `<button data-focus="${c}" aria-pressed="${co === c}">${c}</button>`).join("")}</div>
+    <div class="co-grid"><div class="panel"><h3>Interview process reported</h3>${list(f.process)}</div><div class="panel"><h3>What they test</h3>${list(f.tests)}</div></div>
+    <div class="panel" style="margin-bottom:14px"><h3>Prep checklist</h3>${list(f.prep)}</div>
+    <section class="cat"><header><h3>Questions reported for ${co}</h3><p>${rep.filter(q => q.badge === "R").length} reported, ${rep.filter(q => q.badge === "G").length} from guides. Open "Hint & notes" to see the source.</p></header>${rep.map(q => qRow(q.id)).join("")}</section>
+    ${cases.length ? `<section class="cat"><header><h3>${co} cases in your casebooks</h3></header>${cases.map(c => caseRow(c.id)).join("")}</section>` : ""}
+    ${prac.length ? `<section class="cat"><header><h3>Practice cases modelled on ${co}'s business</h3><p>Not reported questions. They cover the payments topics Juspay's reported rounds touch.</p></header>${prac.map(q => qRow(q.id)).join("")}</section>` : ""}
+    <div class="panel"><h3>Sources for ${co}</h3><ul>${f.srcs.map(k => `<li>${srcLink(k)}</li>`).join("")}</ul>
+      <p class="srcl">${co === "Juspay" ? "Juspay has much less public PM interview data than Swiggy, and its process has varied across years and roles. Treat it as indicative." : "Several Swiggy items come from prep guides rather than candidates; they're marked Guide."}</p></div>`;
+}
+
+function renderCases() {
+  const s = ui.cbSearch.trim().toLowerCase();
+  const base = CASES.filter(c => ui.cbBook === "all" || c.book === ui.cbBook);
+  const list = base.filter(c => (ui.cbSeg === "all" || c.seg === ui.cbSeg)
+    && (ui.cbStatus === "all" || (ui.cbStatus === "todo" && !state.done[c.id]) || (ui.cbStatus === "done" && state.done[c.id]) || (ui.cbStatus === "weak" && state.rate[c.id] && state.rate[c.id] <= 2))
+    && (!s || (c.name + " " + c.prompt + " " + c.asked).toLowerCase().includes(s)));
+  const segChips = [`<button class="chip" data-cbseg="all" aria-pressed="${ui.cbSeg === "all"}">All<span class="n">${base.filter(c => state.done[c.id]).length}/${base.length}</span></button>`,
+    ...Object.keys(SEGS).map(k => { const n = base.filter(c => c.seg === k); return n.length ? `<button class="chip" data-cbseg="${k}" aria-pressed="${ui.cbSeg === k}">${SEGS[k]}<span class="n">${n.filter(c => state.done[c.id]).length}/${n.length}</span></button>` : ""; })].join("");
+  const card = c => `<button class="case ${state.done[c.id] ? "is-done" : ""}" data-case="${c.id}">
+      <div class="top"><span class="seg seg-${c.seg}">${SEGS[c.seg]}</span>${starStr(state.rate[c.id])}</div>
+      <h4>${esc(c.name)}</h4><div class="prompt">${esc(c.prompt)}</div>
+      <div class="foot"><span>${BOOKS[c.book].short} · p.${c.page}${c.lvl ? " · " + c.lvl : ""}</span>${c.asked ? `<span class="tag rep">Asked at ${esc(c.asked)}</span>` : ""}${state.notes[c.id] ? '<span class="tag plain">notes</span>' : ""}</div></button>`;
+  return `<div class="section-head"><h2>Casebooks</h2><p>${CASES.length} practice cases from the IIMA Product Mindset (2026-27) and IIMB Sigma (2026-27) casebooks. Click a case to open its page in the PDF, then rate how you did and add notes. "Asked at" is the company the casebook says asked it.</p></div>
+    <div class="kicker">Read first</div>
+    <div class="readlist">${READING.map(r => `<button data-read="${r.book}:${r.page}">${esc(r.name)}<span>${BOOKS[r.book].short} p.${r.page}</span></button>`).join("")}</div>
+    <div class="filters">${[["all","Both books"],["iima","IIMA"],["sigma","Sigma (IIMB)"]].map(b => `<button class="chip" data-cbbook="${b[0]}" aria-pressed="${ui.cbBook === b[0]}">${b[1]}</button>`).join("")}</div>
+    <div class="filters">${segChips}</div>
+    <div class="filters"><input class="search" id="cbsearch" type="search" placeholder="Search cases: Swiggy, UPI, elderly…" value="${esc(ui.cbSearch)}">
+      <select class="sel" id="cbstatus" aria-label="Status">${[["all","All"],["todo","Not attempted"],["done","Attempted"],["weak","Rated 1 to 2 stars"]].map(o => `<option value="${o[0]}" ${ui.cbStatus === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select></div>
+    <div class="cbgrid">${list.map(card).join("") || '<p class="srcl">No cases match these filters.</p>'}</div>`;
 }
 
 function renderConcepts() {
-  return `<div class="section-head"><div><h2>Concepts &amp; frameworks</h2><p>Tick a concept when you can explain it to a friend in under a minute without notes. Frameworks are checklists to keep you structured, not scripts to recite.</p></div></div>
-    ${CONCEPTS.map(g => `<h3 class="groupttl">${esc(g.g)}</h3><div class="cgrid">${g.items.map(c => {
+  return `<div class="section-head"><h2>Concepts &amp; frameworks</h2><p>Tick a concept when you can explain it in under a minute without notes. "Read" opens the matching casebook page.</p></div>
+    ${CONCEPTS.map(g => `<h3 class="kicker" style="margin-top:20px">${esc(g.g)}</h3><div class="co-grid">${g.items.map(c => {
       const done = !!state.done[c.id];
-      return `<article class="concept ${done ? "is-done" : ""}"><div class="top"><input type="checkbox" class="check" id="cb-${c.id}" data-toggle="${c.id}" ${done ? "checked" : ""} aria-label="I can explain ${esc(c.name)}">
-        <div style="min-width:0"><h4><label for="cb-${c.id}">${esc(c.name)}</label></h4><p>${esc(c.what)}</p>
-        ${c.list ? `<${c.id === "c-rca" || c.id === "c-guess" || c.id === "c-circles" || c.id === "c-approach" ? "ol" : "ul"}>${c.list.map(x => `<li>${esc(x)}</li>`).join("")}</${c.id === "c-rca" || c.id === "c-guess" || c.id === "c-circles" || c.id === "c-approach" ? "ol" : "ul"}>` : ""}
-        ${c.table ? `<div style="overflow-x:auto"><table class="anchors">${c.table.map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table></div>` : ""}
-        ${c.ex ? `<div class="ex">${esc(c.ex)}</div>` : ""}</div></div></article>`;
+      return `<article class="panel" style="${done ? "border-color:var(--good)" : ""}"><div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px">
+        <input type="checkbox" class="check" id="cb-${c.id}" data-toggle="${c.id}" ${done ? "checked" : ""} aria-label="I can explain ${esc(c.name)}">
+        <div style="min-width:0"><h3 style="font-size:16px"><label for="cb-${c.id}">${esc(c.name)}</label></h3><p>${esc(c.what)}</p>
+        ${c.list ? `<ul>${c.list.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+        ${c.ex ? `<p class="srcl">${esc(c.ex)}</p>` : ""}
+        ${c.ref ? `<p><button class="icon-btn" data-read="${c.ref[0]}:${c.ref[1]}">Read in ${BOOKS[c.ref[0]].short}, p.${c.ref[1]}</button></p>` : ""}</div></div></article>`;
     }).join("")}</div>`).join("")}`;
 }
 
-function renderResources() {
-  return `<div class="section-head"><div><h2>Resources</h2><p>Enough to cover the plan. Pick one book and use the guides for specific case types rather than reading everything.</p></div></div>
-    <div class="res">${RESOURCES.map(r => `<div class="item"><strong>${r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${esc(r.name)}</a>` : esc(r.name)}</strong><p>${esc(r.why)}</p></div>`).join("")}</div>
-    <h3 class="groupttl" style="margin-top:28px">Using mentor sessions well</h3>
-    <div class="res"><div class="item"><p style="color:var(--ink)">Ask them to interrupt you like a real interviewer. After each mock, ask for the one thing that would most change your score. Write it in the question's notes and redo the same case the next day.</p></div>
-    <div class="item"><p style="color:var(--ink)">Bring your "Flagged to revisit" list. Ask how they would open those cases in the first two minutes.</p></div></div>`;
+function renderSources() {
+  const used = [...new Set(Q.map(q => q[4]).filter(Boolean))];
+  return `<div class="section-head"><h2>Sources and method</h2><p>I searched Glassdoor, Grapevine, Medium and Substack write-ups, LinkedIn posts, Blind, and company-tagged question banks for APM and PM-1 questions, with a separate pass for Juspay and Swiggy. No Reddit threads surfaced for these companies, so none are cited. Direct page fetches were blocked in my research environment, so details come from search-engine extracts of these pages. Questions marked Reported are as specific as the source allowed.</p></div>
+    <div class="panel"><ul>${used.map(k => `<li>${srcLink(k)}</li>`).join("")}</ul></div>
+    <h3 class="kicker" style="margin-top:20px">Also useful</h3>
+    <div class="panel"><ul><li>${srcLink("hpm_rca")}</li><li>${srcLink("ag_ai")}</li><li>Decode and Conquer, Lewis Lin (CIRCLES)</li><li>Cracking the PM Interview, Gayle McDowell and Jackie Bavaro</li></ul></div>`;
 }
 
 function render() {
   renderStats();
   document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === ui.tab)));
   const main = document.getElementById("main");
-  const active = document.activeElement && document.activeElement.id;
-  const caret = active === "qsearch" ? document.activeElement.selectionStart : null;
-  main.innerHTML = ui.tab === "plan" ? renderPlan() : ui.tab === "bank" ? renderBank() : ui.tab === "concepts" ? renderConcepts() : renderResources();
-  if (active) { const el = document.getElementById(active); if (el) { el.focus(); if (caret != null && el.setSelectionRange) el.setSelectionRange(caret, caret); } }
+  const a = document.activeElement, aid = a && a.id, caret = a && (aid === "qsearch" || aid === "cbsearch") ? a.selectionStart : null;
+  main.innerHTML = { plan: renderPlan, bank: renderBank, focus: renderFocus, cases: renderCases, concepts: renderConcepts, sources: renderSources }[ui.tab]();
+  if (aid && !viewer.open) { const el = document.getElementById(aid); if (el) { el.focus(); if (caret != null && el.setSelectionRange) el.setSelectionRange(caret, caret); } }
 }
 
-/* ---------------- Events ---------------- */
+/* ============ PDF viewer ============ */
+const viewer = { open: false, book: null, page: 1, caseId: null, zoom: 1, total: 0, task: null, returnFocus: null };
+const docs = {};
+let pdfjsPromise = null;
+function loadPdfJs() {
+  if (!pdfjsPromise) pdfjsPromise = new Promise((res, rej) => {
+    const s = document.createElement("script"); s.src = "vendor/pdf.min.js";
+    s.onload = () => { try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = "vendor/pdf.worker.min.js"; res(window.pdfjsLib); } catch (e) { rej(e); } };
+    s.onerror = () => { pdfjsPromise = null; rej(new Error("pdf.js failed to load")); };
+    document.head.appendChild(s);
+  });
+  return pdfjsPromise;
+}
+function getDoc(book) { if (!docs[book]) docs[book] = loadPdfJs().then(lib => lib.getDocument(BOOKS[book].file).promise).catch(e => { delete docs[book]; throw e; }); return docs[book]; }
+function openViewer(book, page, caseId) {
+  Object.assign(viewer, { open: true, book, page, caseId: caseId || null, zoom: 1, total: 0, returnFocus: document.activeElement });
+  const c = caseId ? CMAP[caseId] : null;
+  const title = c ? c.name : (READING.find(r => r.book === book && r.page === page) || {}).name || BOOKS[book].name;
+  document.getElementById("viewerRoot").innerHTML = `<div class="viewer" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <div class="vbar"><div style="min-width:0"><h3>${esc(title)}</h3><div class="sub">${esc(BOOKS[book].name)}${c ? " · " + SEGS[c.seg] + (c.asked ? " · asked at " + esc(c.asked) : "") : ""}</div></div>
+      <div class="vctl"><button class="icon-btn" data-v="prev" aria-label="Previous page">‹ Prev</button><span class="pg" id="vpg">p. ${page}</span><button class="icon-btn" data-v="next" aria-label="Next page">Next ›</button>
+        <button class="icon-btn" data-v="zout" aria-label="Zoom out">−</button><button class="icon-btn" data-v="zin" aria-label="Zoom in">+</button>
+        <a class="icon-btn" id="vopen" href="${BOOKS[book].file}#page=${page}" target="_blank" rel="noopener">Open PDF</a>
+        <button class="icon-btn primary" data-v="close" id="vclose">Close</button></div></div>
+    <div class="vbody"><div class="canvaswrap" id="cwrap"><div class="vmsg" id="vmsg">Loading the casebook…</div><canvas id="vcanvas" hidden></canvas></div>
+      <aside class="vside" id="vside"></aside></div></div>`;
+  document.body.style.overflow = "hidden";
+  document.getElementById("vclose").focus();
+  renderViewerSide(); renderPdfPage();
+}
+function closeViewer() {
+  viewer.open = false; document.getElementById("viewerRoot").innerHTML = ""; document.body.style.overflow = "";
+  const y = window.scrollY; render(); window.scrollTo(0, y);
+}
+function renderViewerSide() {
+  const side = document.getElementById("vside"); if (!side) return;
+  const id = viewer.caseId;
+  if (!id) { side.innerHTML = `<div><div class="kicker">Reading</div><p class="srcl">Use Prev and Next (or the arrow keys) to page through. Close returns you to where you were.</p></div>`; return; }
+  const c = CMAP[id], r = state.rate[id] || 0, done = !!state.done[id];
+  side.innerHTML = `<div><div class="kicker">The case</div><p style="margin:0">${esc(c.prompt)}</p>
+      <p class="srcl">Try it out loud before reading the solution. It starts on p.${c.page}.</p></div>
+    <div><div class="kicker">How did you do?</div>
+      <div class="rate" role="radiogroup" aria-label="Self rating">${[1,2,3,4,5].map(i => `<button class="${i <= r ? "on" : ""}" data-rate="${i}" role="radio" aria-checked="${i === r}" aria-label="${i} star${i > 1 ? "s" : ""}">★</button>`).join("")}</div>
+      <div class="ratehelp">1 lost structure · 3 solid but missed things · 5 interview-ready</div></div>
+    <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" class="check" data-toggle="${id}" ${done ? "checked" : ""}> Attempted</label>
+    <div><div class="kicker">Notes</div><textarea class="note" id="vnote" data-note="${id}" placeholder="What went well, what you missed, mentor feedback">${esc(state.notes[id] || "")}</textarea></div>`;
+}
+async function renderPdfPage() {
+  const msg = document.getElementById("vmsg"), canvas = document.getElementById("vcanvas"), wrap = document.getElementById("cwrap");
+  if (!canvas) return;
+  const pg = document.getElementById("vpg"), op = document.getElementById("vopen");
+  const want = viewer.page, book = viewer.book;
+  if (pg) pg.textContent = `p. ${want}${viewer.total ? " / " + viewer.total : ""}`;
+  if (op) op.href = `${BOOKS[book].file}#page=${want}`;
+  try {
+    const doc = await getDoc(book);
+    if (!viewer.open || viewer.book !== book) return;
+    viewer.total = doc.numPages;
+    viewer.page = Math.min(Math.max(1, viewer.page), doc.numPages);
+    if (pg) pg.textContent = `p. ${viewer.page} / ${viewer.total}`;
+    const page = await doc.getPage(viewer.page);
+    if (viewer.task) { try { viewer.task.cancel(); } catch (e) {} }
+    const base = page.getViewport({ scale: 1 });
+    const availW = Math.max(260, wrap.clientWidth - 32), availH = Math.max(260, wrap.clientHeight - 32);
+    const fit = Math.min(availW / base.width, availH / base.height);
+    const scale = Math.max(fit, availW / base.width * 0.6) * viewer.zoom, dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const vp = page.getViewport({ scale: scale * dpr });
+    canvas.width = Math.floor(vp.width); canvas.height = Math.floor(vp.height);
+    canvas.style.width = Math.floor(vp.width / dpr) + "px"; canvas.style.height = Math.floor(vp.height / dpr) + "px";
+    viewer.task = page.render({ canvasContext: canvas.getContext("2d"), viewport: vp });
+    await viewer.task.promise;
+    msg.hidden = true; canvas.hidden = false; wrap.scrollTop = 0;
+  } catch (e) {
+    if (e && e.name === "RenderingCancelledException") return;
+    if (!document.getElementById("vmsg")) return;
+    msg.hidden = false; canvas.hidden = true;
+    msg.innerHTML = `The page viewer couldn't load here. Use <a href="${BOOKS[viewer.book].file}#page=${viewer.page}" target="_blank" rel="noopener">Open PDF</a> to read page ${viewer.page} in a new tab. Rating and notes still work.`;
+  }
+}
+
+/* ============ Events ============ */
 document.addEventListener("change", e => {
   const t = e.target;
-  if (t.dataset.toggle) { const id = t.dataset.toggle; if (t.checked) state.done[id] = true; else delete state.done[id]; queueSave(); render(); }
+  if (t.dataset.toggle) { const id = t.dataset.toggle; if (t.checked) state.done[id] = true; else delete state.done[id]; queueSave(); if (viewer.open) renderStats(); else render(); }
   else if (t.id === "startDate") { state.start = t.value || null; ui.openDays = null; queueSave(); render(); }
   else if (t.id === "qstatus") { ui.status = t.value; render(); }
+  else if (t.id === "qco") { ui.co = t.value; render(); }
+  else if (t.id === "cbstatus") { ui.cbStatus = t.value; render(); }
 });
 document.addEventListener("input", e => {
   const t = e.target;
-  if (t.dataset.note) { const id = t.dataset.note; if (t.value.trim()) state.notes[id] = t.value; else delete state.notes[id]; queueSave(); }
+  if (t.dataset && t.dataset.note) { const id = t.dataset.note; if (t.value.trim()) state.notes[id] = t.value; else delete state.notes[id]; queueSave(); }
   else if (t.id === "qsearch") { ui.search = t.value; render(); }
+  else if (t.id === "cbsearch") { ui.cbSearch = t.value; render(); }
 });
 document.addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
-  if (b.dataset.tab) { ui.tab = b.dataset.tab; try { history.replaceState(null, "", "#" + ui.tab); } catch (err) {} render(); window.scrollTo({ top: 0 }); }
-  else if (b.dataset.flag) { const id = b.dataset.flag; if (state.flag[id]) delete state.flag[id]; else state.flag[id] = true; queueSave(); render(); }
-  else if (b.dataset.expand) { const id = b.dataset.expand; ui.open.has(id) ? ui.open.delete(id) : ui.open.add(id); render(); const n = document.getElementById("note-" + id); if (n) n.focus(); }
-  else if (b.dataset.cat) { ui.cat = b.dataset.cat; render(); }
+  const d = b.dataset;
+  if (d.tab) { ui.tab = d.tab; try { history.replaceState(null, "", "#" + ui.tab); } catch (err) {} render(); window.scrollTo({ top: 0 }); }
+  else if (d.flag) { if (state.flag[d.flag]) delete state.flag[d.flag]; else state.flag[d.flag] = true; queueSave(); render(); }
+  else if (d.expand) { ui.open.has(d.expand) ? ui.open.delete(d.expand) : ui.open.add(d.expand); render(); const n = document.getElementById("note-" + d.expand); if (n) n.focus(); }
+  else if (d.type) { ui.type = d.type; render(); }
+  else if (d.focus) { ui.focusCo = d.focus; render(); }
+  else if (d.cbbook) { ui.cbBook = d.cbbook; render(); }
+  else if (d.cbseg) { ui.cbSeg = d.cbseg; render(); }
+  else if (d.case) { const c = CMAP[d.case]; openViewer(c.book, c.page, c.id); }
+  else if (d.read) { const [bk, p] = d.read.split(":"); openViewer(bk, +p, null); }
+  else if (d.rate) { const id = viewer.caseId, v = +d.rate; if (!id) return; if (state.rate[id] === v) delete state.rate[id]; else { state.rate[id] = v; state.done[id] = true; } queueSave(); renderViewerSide(); renderStats(); }
+  else if (d.v) {
+    if (d.v === "close") closeViewer();
+    else if (d.v === "prev") { viewer.page = Math.max(1, viewer.page - 1); renderPdfPage(); }
+    else if (d.v === "next") { viewer.page = viewer.total ? Math.min(viewer.total, viewer.page + 1) : viewer.page + 1; renderPdfPage(); }
+    else if (d.v === "zin") { viewer.zoom = Math.min(3, viewer.zoom + 0.25); renderPdfPage(); }
+    else if (d.v === "zout") { viewer.zoom = Math.max(0.5, viewer.zoom - 0.25); renderPdfPage(); }
+  }
 });
-document.addEventListener("toggle", e => {
-  const d = e.target; if (!d.dataset || !d.dataset.day) return;
-  if (d.open) ui.openDays.add(d.dataset.day); else ui.openDays.delete(d.dataset.day);
-}, true);
+document.addEventListener("keydown", e => {
+  if (!viewer.open || (e.target && /TEXTAREA|INPUT/.test(e.target.tagName))) return;
+  if (e.key === "Escape") closeViewer();
+  else if (e.key === "ArrowRight") { viewer.page = viewer.total ? Math.min(viewer.total, viewer.page + 1) : viewer.page + 1; renderPdfPage(); }
+  else if (e.key === "ArrowLeft") { viewer.page = Math.max(1, viewer.page - 1); renderPdfPage(); }
+});
+document.addEventListener("toggle", e => { const d = e.target; if (!d.dataset || !d.dataset.day || !ui.openDays) return; if (d.open) ui.openDays.add(d.dataset.day); else ui.openDays.delete(d.dataset.day); }, true);
+let rsz; window.addEventListener("resize", () => { if (!viewer.open) return; clearTimeout(rsz); rsz = setTimeout(renderPdfPage, 200); });
 
 render();
 </script>
