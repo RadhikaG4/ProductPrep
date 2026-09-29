@@ -3,37 +3,41 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: a working desk. Live progress header, sticky tab bar, one working column; casebook cards in a grid; PDF viewer as a full-screen sheet. */
+/* Layout: a working desk. Header with live progress and a theme switch, sticky tabs, one working column. Graphite neutrals with a single violet accent. */
 :root {
-  --bg: #f4f6fb;
+  --bg: #f6f6f4;
   --surface: #ffffff;
-  --ink: #151a2d;
-  --muted: #5b6380;
-  --line: #dde2ee;
-  --accent: #2a4bd7;
-  --accent-soft: #e7ecff;
-  --mark: #f2b705;
-  --mark-ink: #3d2f00;
-  --good: #16784e;
-  --good-soft: #def3e8;
-  --warn: #b4501b;
-  --warn-soft: #fbe9df;
-  --sheet: #e9ecf4;
+  --ink: #18181b;
+  --muted: #62626b;
+  --line: #e3e3e0;
+  --accent: #5b4bdb;
+  --accent-ink: #ffffff;
+  --accent-soft: #eeecfd;
+  --good: #1f7a4d;
+  --good-soft: #e2f2e9;
+  --warn: #a8551a;
+  --warn-soft: #f8ebdf;
+  --star: #d99a00;
+  --s-design: #5b4bdb; --s-rca: #c0392b; --s-guess: #1f7a4d; --s-improve: #8e44ad; --s-metrics: #9a6b00; --s-pricing: #11788a; --s-gtm: #b35415; --s-strategy: #4a5068;
   --f-display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
   --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e1120; --surface: #161a2b; --ink: #e7eaf6; --muted: #9ba3c2; --line: #29304a;
-    --accent: #93a6ff; --accent-soft: #222a50; --mark: #e2bb3b; --mark-ink: #1b1400;
-    --good: #62d39d; --good-soft: #15321f; --warn: #f0a070; --warn-soft: #3a2418; --sheet: #0a0c17; color-scheme: dark;
+    --bg: #111113; --surface: #1a1a1d; --ink: #ececef; --muted: #9a9aa3; --line: #2d2d33;
+    --accent: #a99bff; --accent-ink: #15131f; --accent-soft: #262240; --good: #5cc98f; --good-soft: #16291f;
+    --warn: #eaa06b; --warn-soft: #35241a; --star: #f0c040;
+    --s-design: #a99bff; --s-rca: #ff8a7a; --s-guess: #5cc98f; --s-improve: #d09bf0; --s-metrics: #f0c040; --s-pricing: #6fd3de; --s-gtm: #f0a070; --s-strategy: #b8bdd4;
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e1120; --surface: #161a2b; --ink: #e7eaf6; --muted: #9ba3c2; --line: #29304a;
-  --accent: #93a6ff; --accent-soft: #222a50; --mark: #e2bb3b; --mark-ink: #1b1400;
-  --good: #62d39d; --good-soft: #15321f; --warn: #f0a070; --warn-soft: #3a2418; --sheet: #0a0c17; color-scheme: dark;
+  --bg: #111113; --surface: #1a1a1d; --ink: #ececef; --muted: #9a9aa3; --line: #2d2d33;
+  --accent: #a99bff; --accent-ink: #15131f; --accent-soft: #262240; --good: #5cc98f; --good-soft: #16291f;
+  --warn: #eaa06b; --warn-soft: #35241a; --star: #f0c040;
+  --s-design: #a99bff; --s-rca: #ff8a7a; --s-guess: #5cc98f; --s-improve: #d09bf0; --s-metrics: #f0c040; --s-pricing: #6fd3de; --s-gtm: #f0a070; --s-strategy: #b8bdd4;
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55; }
@@ -43,10 +47,13 @@ a { color: var(--accent); }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-header.top { padding-block: 28px 18px; }
+header.top { padding-block: 26px 16px; }
+.toprow { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 header.top h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 700; margin-top: 6px; }
 header.top p.lede { color: var(--muted); max-width: 66ch; margin: 8px 0 0; }
+.theme-btn { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 13px; white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+.theme-btn .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--ink); box-shadow: inset -4px -2px 0 0 var(--surface); }
 .stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
 .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
 .stat .k { font-size: 11px; color: var(--muted); font-family: var(--f-mono); letter-spacing: .04em; text-transform: uppercase; }
@@ -81,7 +88,7 @@ details.day.complete .daynum { background: var(--good-soft); color: var(--good);
 .daytitle h3 { font-size: 18px; }
 .daytitle .meta { font-size: 13px; color: var(--muted); }
 .pill { font-family: var(--f-mono); font-size: 12px; padding: 3px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.pill.today { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.pill.today { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .pill.done { background: var(--good-soft); border-color: transparent; color: var(--good); }
 .daybody { padding: 0 16px 16px; display: grid; gap: 14px; }
 .daybody .focus { color: var(--muted); margin: 0; max-width: 78ch; }
@@ -89,7 +96,7 @@ details.day.complete .daynum { background: var(--good-soft); color: var(--good);
 .tip { background: var(--accent-soft); border-radius: 8px; padding: 10px 12px; font-size: 14px; }
 
 .row { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 10px; align-items: start; padding: 9px 0; border-top: 1px solid var(--line); }
-.block .row:first-of-type, .cat .row:first-of-type { border-top: 0; }
+.block .row:first-of-type, .cat .row:first-of-type, .card .row:first-of-type { border-top: 0; }
 .check { appearance: none; width: 20px; height: 20px; border: 2px solid var(--muted); border-radius: 5px; margin: 2px 0 0; cursor: pointer; display: grid; place-items: center; background: var(--surface); flex: none; }
 .check:checked { background: var(--good); border-color: var(--good); }
 .check:checked::after { content: ""; width: 5px; height: 10px; border: solid var(--surface); border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px); }
@@ -102,18 +109,26 @@ details.day.complete .daynum { background: var(--good-soft); color: var(--good);
 .tag.rep { background: var(--good-soft); color: var(--good); }
 .tag.gd { background: var(--warn-soft); color: var(--warn); }
 .tag.co { background: var(--ink); color: var(--bg); }
-.tag.src-dc { background: color-mix(in srgb, var(--s-improve) 16%, transparent); color: var(--s-improve); }
-.tag.src-iima, .tag.src-sigma { background: color-mix(in srgb, var(--s-pricing) 16%, transparent); color: var(--s-pricing); }
-.tag.src-exponent { background: color-mix(in srgb, var(--s-gtm) 16%, transparent); color: var(--s-gtm); }
+.tag.src-dc { background: color-mix(in srgb, var(--s-improve) 15%, transparent); color: var(--s-improve); }
+.tag.src-iima, .tag.src-sigma, .tag.src-primer { background: color-mix(in srgb, var(--s-pricing) 15%, transparent); color: var(--s-pricing); }
+.tag.src-exponent { background: color-mix(in srgb, var(--s-gtm) 15%, transparent); color: var(--s-gtm); }
+.tag.src-apps { background: color-mix(in srgb, var(--s-guess) 15%, transparent); color: var(--s-guess); }
 .srcl { font-size: 12px; color: var(--muted); }
-.actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
 .icon-btn { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; color: var(--muted); white-space: nowrap; text-decoration: none; display: inline-block; }
-.icon-btn:hover { color: var(--ink); }
-.icon-btn[aria-pressed=true] { background: var(--mark); border-color: var(--mark); color: var(--mark-ink); font-weight: 600; }
-.icon-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.icon-btn:hover { color: var(--ink); border-color: var(--muted); }
+.icon-btn[aria-pressed=true] { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); font-weight: 600; }
+.icon-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .more { margin-top: 8px; display: grid; gap: 8px; }
 .hint { font-size: 14px; background: var(--bg); border-left: 3px solid var(--accent); padding: 8px 10px; border-radius: 0 6px 6px 0; }
-textarea.note { width: 100%; min-height: 70px; font: inherit; font-size: 14px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 8px; resize: vertical; }
+textarea.note, textarea.io { width: 100%; min-height: 70px; font: inherit; font-size: 14px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 8px; resize: vertical; }
+textarea.io { font-family: var(--f-mono); font-size: 12px; min-height: 90px; }
+
+.rate { display: inline-flex; gap: 0; align-items: center; }
+.rate button { background: none; border: 0; padding: 0 1px; font-size: 17px; line-height: 1; cursor: pointer; color: var(--line); }
+.rate button.on { color: var(--star); }
+.rate button:hover { transform: scale(1.12); }
+.rate .lbl { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-right: 4px; }
 
 .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
 .chip { background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: 13px; }
@@ -121,10 +136,10 @@ textarea.note { width: 100%; min-height: 70px; font: inherit; font-size: 14px; b
 .chip .n { font-family: var(--f-mono); font-size: 11px; opacity: .7; margin-left: 4px; }
 input.search { font: inherit; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-width: 0; flex: 1 1 220px; }
 select.sel { font: inherit; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; max-width: 100%; }
-.cat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 6px; margin-bottom: 14px; }
-.cat > header { margin-bottom: 4px; }
-.cat > header h3 { font-size: 19px; }
-.cat > header p { margin: 2px 0 0; color: var(--muted); font-size: 14px; max-width: 76ch; }
+.cat, .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 6px; margin-bottom: 14px; }
+.cat > header, .card > header { margin-bottom: 4px; }
+.cat > header h3, .card > header h3 { font-size: 19px; }
+.cat > header p, .card > header p { margin: 2px 0 0; color: var(--muted); font-size: 14px; max-width: 76ch; }
 .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 13px; color: var(--muted); margin-bottom: 14px; align-items: center; }
 
 .co-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 14px; }
@@ -137,64 +152,57 @@ select.sel { font: inherit; background: var(--surface); color: var(--ink); borde
 .cotabs button { font-family: var(--f-display); font-weight: 700; font-size: 18px; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; }
 .cotabs button[aria-pressed=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
-.cbgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
-.case { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; min-width: 0; cursor: pointer; text-align: left; width: 100%; }
-.case:hover { border-color: var(--accent); }
+.today-head { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 14px; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 16px; align-items: center; }
+.today-head h2 { font-size: 26px; }
+.today-head .meta { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.ring { width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--accent) calc(var(--p) * 1%), var(--line) 0); }
+.ring span { width: 60px; height: 60px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; font-family: var(--f-display); font-weight: 700; font-size: 17px; font-variant-numeric: tabular-nums; }
+.carry-day { font-family: var(--f-mono); font-size: 12px; color: var(--muted); margin: 10px 0 2px; text-transform: uppercase; letter-spacing: .06em; }
+
+.cbgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.case { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 7px; align-content: start; min-width: 0; }
 .case.is-done { border-color: var(--good); }
 .case .top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-.case .seg { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 4px; font-weight: 500; background: var(--sc-bg); color: var(--sc-fg); }
+.case .seg { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 4px; font-weight: 500; color: var(--sc); background: color-mix(in srgb, var(--sc) 14%, transparent); }
 .case h4 { font-size: 16px; }
+.case h4 a { color: var(--ink); text-decoration: none; }
+.case h4 a:hover { color: var(--accent); text-decoration: underline; }
 .case .prompt { font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.case .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); font-family: var(--f-mono); flex-wrap: wrap; }
-.stars { color: var(--mark); letter-spacing: 1px; font-size: 14px; white-space: nowrap; }
-.stars .off { color: var(--line); }
+.case .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); font-family: var(--f-mono); }
+.case .ctl { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 8px; }
+.case .ctl label { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); cursor: pointer; }
+.seg-design { --sc: var(--s-design); } .seg-rca { --sc: var(--s-rca); } .seg-guess { --sc: var(--s-guess); } .seg-improve { --sc: var(--s-improve); }
+.seg-metrics { --sc: var(--s-metrics); } .seg-pricing { --sc: var(--s-pricing); } .seg-gtm { --sc: var(--s-gtm); } .seg-strategy { --sc: var(--s-strategy); }
 .readlist { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-.readlist button { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
-.readlist button span { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-left: 6px; }
-:root { --s-design: #2a4bd7; --s-rca: #b3261e; --s-guess: #16784e; --s-improve: #6a38b8; --s-metrics: #8a6100; --s-pricing: #0d6a75; --s-gtm: #b4501b; --s-strategy: #3d4663; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --s-design: #93a6ff; --s-rca: #ff8a80; --s-guess: #62d39d; --s-improve: #c6a4ff; --s-metrics: #f2c14e; --s-pricing: #6fd3de; --s-gtm: #f0a070; --s-strategy: #b8c0dc; } }
-:root[data-theme="dark"] { --s-design: #93a6ff; --s-rca: #ff8a80; --s-guess: #62d39d; --s-improve: #c6a4ff; --s-metrics: #f2c14e; --s-pricing: #6fd3de; --s-gtm: #f0a070; --s-strategy: #b8c0dc; }
-.seg-design { --sc-fg: var(--s-design); } .seg-rca { --sc-fg: var(--s-rca); } .seg-guess { --sc-fg: var(--s-guess); } .seg-improve { --sc-fg: var(--s-improve); }
-.seg-metrics { --sc-fg: var(--s-metrics); } .seg-pricing { --sc-fg: var(--s-pricing); } .seg-gtm { --sc-fg: var(--s-gtm); } .seg-strategy { --sc-fg: var(--s-strategy); }
-.case .seg { background: color-mix(in srgb, var(--sc-fg) 14%, transparent); }
-
-.viewer { position: fixed; inset: 0; z-index: 50; background: var(--sheet); display: grid; grid-template-rows: auto minmax(0,1fr); padding-top: env(safe-area-inset-top, 0px); }
-.vbar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--line); }
-.vbar h3 { font-size: 17px; min-width: 0; }
-.vbar .sub { font-size: 12px; color: var(--muted); font-family: var(--f-mono); }
-.vctl { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.vctl .pg { font-family: var(--f-mono); font-size: 13px; min-width: 88px; text-align: center; font-variant-numeric: tabular-nums; }
-.vbody { display: grid; grid-template-columns: minmax(0,1fr) 320px; min-height: 0; }
-.canvaswrap { overflow: auto; padding: 16px; min-width: 0; display: flex; justify-content: center; align-items: flex-start; }
-.canvaswrap canvas { background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,.18); max-width: none; }
-.vmsg { color: var(--muted); padding: 40px 16px; text-align: center; max-width: 50ch; }
-.vside { background: var(--surface); border-left: 1px solid var(--line); padding: 16px; overflow: auto; display: grid; gap: 14px; align-content: start; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
-.rate { display: flex; gap: 4px; }
-.rate button { background: none; border: 0; font-size: 28px; line-height: 1; cursor: pointer; color: var(--line); padding: 2px; }
-.rate button.on { color: var(--mark); }
-.ratehelp { font-size: 12px; color: var(--muted); }
+.readlist a { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; color: var(--ink); text-decoration: none; }
+.readlist a:hover { border-color: var(--accent); }
+.readlist a span { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-left: 6px; }
+.okmsg { color: var(--good); font-size: 13px; }
+.errmsg { color: var(--warn); font-size: 13px; }
 @media (max-width: 860px) {
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .co-grid { grid-template-columns: minmax(0,1fr); }
   .row { grid-template-columns: auto minmax(0,1fr); }
   .row .actions { grid-column: 2; justify-content: flex-start; }
-  .vbody { grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr) auto; }
-  .vside { border-left: 0; border-top: 1px solid var(--line); max-height: 42vh; }
 }
-@media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } .rate button:hover { transform: none; } }
 </style>
 
 <header class="top wrap">
-  <div class="eyebrow">APM / PM-1 interview prep · Juspay &amp; Swiggy focus</div>
+  <div class="toprow">
+    <div class="eyebrow">APM / PM-1 interview prep · Juspay &amp; Swiggy focus</div>
+    <button class="theme-btn" id="themeBtn" type="button"><span class="dot" aria-hidden="true"></span><span id="themeLbl">Dark mode</span></button>
+  </div>
   <h1>ProductPrep Tracker</h1>
-  <p class="lede">Real questions candidates reported, the IIMA and IIMB (Sigma) casebooks with every case one click away, and a 10-day plan that ties them together. Tick, rate and take notes as you go.</p>
+  <p class="lede">Real questions candidates reported, the IIMA and IIMB (Sigma) casebooks one click away, and a 10-day plan that ties them together. Tick, rate and take notes as you go.</p>
   <div class="stats" id="stats"></div>
   <div class="sync" id="sync">Saving on this device</div>
 </header>
 
 <nav class="tabs" aria-label="Sections">
   <div class="wrap" role="tablist">
-    <button role="tab" data-tab="plan" aria-selected="true">Schedule</button>
+    <button role="tab" data-tab="today" aria-selected="true">Today</button>
+    <button role="tab" data-tab="plan" aria-selected="false">Schedule</button>
     <button role="tab" data-tab="bank" aria-selected="false">Real questions</button>
     <button role="tab" data-tab="focus" aria-selected="false">Juspay &amp; Swiggy</button>
     <button role="tab" data-tab="cases" aria-selected="false">Casebooks</button>
@@ -204,7 +212,6 @@ select.sel { font: inherit; background: var(--surface); color: var(--ink); borde
 </nav>
 
 <main class="wrap" id="main"></main>
-<div id="viewerRoot"></div>
 
 <script>
 /* ============ Sources ============ */
@@ -529,6 +536,13 @@ const READING = [
   { book: "iima", page: 150, name: "Sector: FinTech" },
   { book: "iima", page: 160, name: "Sector: Food tech" },
   { book: "iima", page: 164, name: "Sector: E-commerce" },
+  { book: "iima", page: 156, name: "Sector: Travel tech" },
+  { book: "iima", page: 168, name: "Sector: OTT" },
+  { book: "iima", page: 172, name: "Sector: Ride hailing" },
+  { book: "iima", page: 176, name: "Sector: SaaS" },
+  { book: "iima", page: 181, name: "Sector: DevTools" },
+  { book: "iima", page: 186, name: "Sector: HealthTech" },
+  { book: "iima", page: 191, name: "Sector: EdTech" },
   { book: "iima", page: 196, name: "Sector: AI" },
   { book: "iima", page: 115, name: "LLMs & prompting" },
   { book: "iima", page: 125, name: "MCP, RAG, agentic AI" },
@@ -575,241 +589,102 @@ const CONCEPTS = [
 ];
 
 /* ============ Schedule ============ */
+/* Every task has a fixed key (k), so editing the plan never moves your ticks onto a different task. */
 const cb = id => "cb:" + id;
-const rd = (book, page, text) => ({ t: text, ref: [book, page], src: book === "iima" ? "IIMA" : "Sigma" });
-const dc = text => ({ t: text, src: "D&C" });
-const ex = text => ({ t: text, src: "Exponent" });
+const T = (k, t) => ({ k, t });
+const rd = (k, book, page, t) => ({ k, t, ref: [book, page], src: book === "iima" ? "IIMA" : "Sigma" });
+const dc = (k, t) => ({ k, t, src: "D&C" });
+const ex = (k, t) => ({ k, t, src: "Exponent" });
 const RES = [
   { name: "Decode and Conquer (Lewis Lin)", role: "Skim for frameworks, don't read cover to cover.", how: "Days 1 to 3 only: the product design chapter (CIRCLES), metrics (AARM), estimation, and behavioral (DIGS). About 45 minutes a day. Read the framework pages and one worked answer per chapter." },
-  { name: "IIMA and IIMB (Sigma) casebooks", role: "Your theory and your practice cases.", how: "Theory pages are linked from each day's Learn list and open at the right page. Practice cases open from the plan or the Casebooks tab, where you rate yourself and keep notes." },
-  { name: "Exponent (paid)", role: "Watch how strong answers sound, then practise live.", how: "Days 1 to 3: the lessons for each case type plus 1 or 2 mock interview videos. Days 4 to 10: one video of the day's case type and one peer mock (book it the day before). Filter the question bank by company (Swiggy) for extra reps." },
-  { name: "Experienced PMs (mentors)", role: "Feedback on your weakest case type.", how: "One mock a day from Day 4. Bring your lowest-rated case type and your Flagged list. Log their feedback in the case's notes." }
+  { name: "IIMA and IIMB (Sigma) casebooks", role: "Theory, industry primers and practice cases.", how: "Every page reference opens the PDF in a new tab at that page. Rate yourself and keep notes back here." },
+  { name: "Exponent (paid)", role: "Hear how strong answers sound, then practise live.", how: "Days 1 to 3: lessons for each case type plus 1 or 2 mock videos. Days 4 to 10: one video of the day's case type and one peer mock (book it the day before). Filter the question bank by Swiggy for extra reps." },
+  { name: "Daily habits", role: "One industry primer and two apps, every day.", how: "Read one IIMA 'Know your sector' primer (about 20 minutes) and explore two apps from that sector (about 20 minutes): who it's for, the core job, one thing you'd change, one metric you'd track." }
 ];
 const DAYS = [
   { id: "d1", n: 1, phase: 1, title: "How PM interviews work + product design", hours: "about 7 hrs",
+    primer: ["iima", 160, "Food tech", "pp. 160 to 163"], apps: "Swiggy and Zomato",
     focus: "Get the design framework from three angles (book, casebooks, Exponent videos), then run your first cases out loud.",
-    learn: [dc("Skim the intro and the product design chapter (CIRCLES). Read one worked answer. 45 min"),
-      rd("iima", 7, "What is product management (pp. 7 to 8). 20 min"),
-      rd("sigma", 8, "Product design approach (pp. 8 to 9). 20 min"),
-      rd("iima", 13, "Personas, JTBD, CIRCLES, prioritization frameworks (pp. 13 to 40). Skim, stop at what's new. 60 min"),
-      ex("Product design / product sense lessons, then watch 2 product design mock videos. Note how they open and how they prioritize. 60 min")],
+    learn: [dc("dc", "Skim the intro and the product design chapter (CIRCLES). Read one worked answer. 45 min"),
+      rd("whatpm", "iima", 7, "What is product management (pp. 7 to 8). 20 min"),
+      rd("sgdesign", "sigma", 8, "Product design approach (pp. 8 to 9). 20 min"),
+      rd("frameworks", "iima", 13, "Personas, JTBD, CIRCLES, prioritization frameworks (pp. 13 to 40). Skim, stop at what's new. 60 min"),
+      ex("ex", "Product design / product sense lessons, then 2 product design mock videos. Note how they open and how they prioritize. 60 min")],
     practice: [cb("sg-10"), cb("sg-11"), cb("ia-272"), "i1", "d1"],
-    output: ["Draft your 90-second 'Tell me about yourself'.", "Write your one-page product design checklist (your own version of CIRCLES)."],
-    tip: "Attempt each case out loud before opening the casebook solution. Time it at 25 minutes, then rate yourself." },
+    output: [T("tmay", "Draft your 90-second 'Tell me about yourself'."), T("checklist", "Write your one-page product design checklist (your own version of CIRCLES).")],
+    tip: "Attempt each case out loud before opening the casebook solution. Time it at 25 minutes, then rate yourself here." },
   { id: "d2", n: 2, phase: 1, title: "RCA, metrics and guesstimates", hours: "about 7 hrs",
+    primer: ["iima", 146, "Quick commerce", "pp. 146 to 149"], apps: "Blinkit and Swiggy Instamart",
     focus: "The analytical round. RCA is the most reported question type in Indian APM loops, including at Swiggy and Juspay.",
-    learn: [dc("Skim the metrics (AARM) and estimation chapters. 45 min"),
-      rd("sigma", 62, "RCA approach and framework (pp. 62 to 63). 20 min"),
-      rd("iima", 231, "Intro to RCA (pp. 231 to 233). 20 min"),
-      rd("iima", 41, "Metrics, HEART, AARRR, North Star, guardrails (pp. 41 to 49). 40 min"),
-      rd("iima", 202, "Guesstimate tips (pp. 202 to 204) + Sigma datasheet (p. 159). 30 min"),
-      ex("Analytical / metrics lessons, then watch 1 'metric dropped' mock and 1 estimation mock. 60 min")],
+    learn: [dc("dc", "Skim the metrics (AARM) and estimation chapters. 45 min"),
+      rd("sgrca", "sigma", 62, "RCA approach and framework (pp. 62 to 63). 20 min"),
+      rd("iarca", "iima", 231, "Intro to RCA (pp. 231 to 233). 20 min"),
+      rd("metrics", "iima", 41, "Metrics, HEART, AARRR, North Star, guardrails (pp. 41 to 49). 40 min"),
+      rd("guess", "iima", 202, "Guesstimate tips (pp. 202 to 204), then the Sigma datasheet (p. 159). 30 min"),
+      ex("ex", "Analytical / metrics lessons, then 1 'metric dropped' mock and 1 estimation mock. 60 min")],
     practice: [cb("sg-64"), cb("sg-65"), "r1", "sw1", "g1", cb("sg-136"), cb("ia-291")],
-    output: ["Write a one-page RCA checklist from memory.", "Make a metrics cheat sheet: north star and guardrails for a food marketplace, a payments product and a social app."],
+    output: [T("rcasheet", "Write a one-page RCA checklist from memory."), T("metricsheet", "Make a metrics cheat sheet: north star and guardrails for a food marketplace, a payments product and a social app.")],
     tip: "In RCA, ask 'sudden or gradual?' and 'only us or the whole market?' in the first minute." },
   { id: "d3", n: 3, phase: 1, title: "Strategy, payments, AI and your stories", hours: "about 7 hrs",
-    focus: "Cover the remaining breadth, the two sectors your target companies work in, and your behavioral material.",
-    learn: [dc("Skim the behavioral chapter (DIGS) and the pricing / strategy sections. 45 min"),
-      rd("iima", 212, "Go-to-market and pricing (pp. 212 to 230). Skim. 40 min"),
-      rd("iima", 150, "FinTech (pp. 150 to 155), Food tech (pp. 160 to 163), Quick commerce (pp. 146 to 149). 50 min"),
-      rd("iima", 115, "LLMs, RAG, agentic AI (pp. 115 to 133). Skim. 30 min"),
-      ex("Behavioral lessons + 1 AI product question video. Then filter the question bank to Swiggy and bookmark 10. 60 min"),
-      "Concepts tab: Payments 101, How UPI works, Payment orchestration. 30 min"],
+    primer: ["iima", 150, "FinTech", "pp. 150 to 155"], apps: "PhonePe (or Google Pay) and the checkout of any D2C brand's website",
+    focus: "Cover the remaining breadth and write your behavioral material.",
+    learn: [dc("dc", "Skim the behavioral chapter (DIGS) and the pricing / strategy sections. 45 min"),
+      rd("gtm", "iima", 212, "Go-to-market and pricing (pp. 212 to 230). Skim. 40 min"),
+      rd("ai", "iima", 115, "LLMs, RAG, agentic AI (pp. 115 to 133). Skim. 30 min"),
+      ex("ex", "Behavioral lessons + 1 AI product question video. Then filter the question bank to Swiggy and bookmark 10. 60 min"),
+      T("payments", "Concepts tab: Payments 101, How UPI works, Payment orchestration. 30 min")],
     practice: [cb("ia-280"), cb("sg-92"), "a5", cb("ia-293"), "jp3", "sw26"],
-    output: ["Write 6 STAR stories and map each to 2 or 3 themes.", "Write your Juspay SOP answer (why Juspay, why PM) in under 200 words.", "Book tomorrow's Exponent peer mock (product design).", "List your 3 weakest areas for your first mentor session."],
+    output: [T("stories", "Write 6 STAR stories and map each to 2 or 3 themes."), T("sop", "Write your Juspay SOP answer (why Juspay, why PM) in under 200 words."), T("book", "Book tomorrow's Exponent peer mock (product design)."), T("weak", "List your 3 weakest areas for your first mentor session.")],
     tip: "Only have 2 days? Skip the D&C strategy sections and the AI reading, and move Day 3's practice to Day 4." },
   { id: "d4", n: 4, phase: 2, title: "Product design, going deep", hours: "about 6 hrs incl. 2 mocks",
+    primer: ["iima", 164, "E-commerce", "pp. 164 to 167"], apps: "Flipkart and Meesho",
     focus: "Harder design prompts with India-specific users and real company prompts.",
-    learn: [ex("Watch 1 product design mock on a harder prompt (accessibility or two-sided users). 30 min"), ex("Peer mock, product design. 45 min")],
+    learn: [ex("video", "Watch 1 product design mock on a harder prompt (accessibility or two-sided users). 30 min"), ex("peer", "Peer mock, product design. 45 min")],
     practice: [cb("sg-30"), cb("sg-46"), cb("sg-55"), cb("ia-250"), "d2", "d4", "sw11"],
-    output: ["Mentor mock: one design case. Log feedback in the case's notes and rate it.", "Book tomorrow's peer mock (product improvement)."] },
+    output: [T("mentor", "Mentor mock: one design case. Log feedback in the case's notes and rate it."), T("book", "Book tomorrow's peer mock (product improvement).")] },
   { id: "d5", n: 5, phase: 2, title: "Improvement and favorite product", hours: "about 6 hrs incl. 2 mocks",
+    primer: ["iima", 168, "OTT", "pp. 168 to 171"], apps: "JioHotstar and Netflix",
     focus: "Improve existing products. Start from the product's goal and today's users.",
-    learn: [ex("Watch 1 product improvement mock. 30 min"), ex("Peer mock, product improvement. 45 min")],
+    learn: [ex("video", "Watch 1 product improvement mock. 30 min"), ex("peer", "Peer mock, product improvement. 45 min")],
     practice: [cb("sg-126"), cb("sg-116"), cb("sg-114"), cb("sg-107"), "sw7", "sw13", "sw18"],
-    output: ["Mentor mock: one improvement case.", "Polish your favorite product answer to 3 minutes."] },
+    output: [T("mentor", "Mentor mock: one improvement case."), T("fav", "Polish your favorite product answer to 3 minutes.")] },
   { id: "d6", n: 6, phase: 2, title: "Metrics and experimentation", hours: "about 6 hrs incl. 2 mocks",
+    primer: ["iima", 172, "Ride hailing", "pp. 172 to 175"], apps: "Uber and Rapido",
     focus: "Success metrics, trade-off calls and A/B tests. Always end with a decision.",
-    learn: [rd("iima", 54, "A/B testing, evals, precision and recall (pp. 54 to 62). 40 min"), ex("Watch 1 metrics / success-metric mock, then peer mock on metrics. 75 min")],
+    learn: [rd("ab", "iima", 54, "A/B testing, evals, precision and recall (pp. 54 to 62). 40 min"), ex("peer", "Watch 1 metrics mock, then a peer mock on metrics. 75 min")],
     practice: [cb("ia-288"), cb("ia-294"), cb("sg-153"), cb("sg-154"), "sw14", "m1", "jp5", "jpp8"],
-    output: ["Mentor mock: one metrics case."] },
+    output: [T("mentor", "Mentor mock: one metrics case.")] },
   { id: "d7", n: 7, phase: 2, title: "RCA day", hours: "about 6 hrs",
+    primer: ["iima", 156, "Travel tech", "pp. 156 to 159"], apps: "MakeMyTrip and IRCTC Rail Connect",
     focus: "Speed and structure on the case type you're most likely to face at both companies.",
-    learn: ["Re-read your RCA checklist. Add payment branches (bank, gateway, UPI app, method). 20 min", ex("Peer mock, RCA. 45 min")],
+    learn: [T("rcarev", "Re-read your RCA checklist. Add payment branches (bank, gateway, UPI app, method). 20 min"), ex("peer", "Peer mock, RCA. 45 min")],
     practice: [cb("sg-67"), cb("sg-82"), cb("sg-86"), cb("ia-309"), cb("ia-313"), "jp7", "jpp1", "sw2", "r6"],
-    output: ["Timed drill: 3 RCA cases, 15 minutes each, back to back."] },
+    output: [T("drill", "Timed drill: 3 RCA cases, 15 minutes each, back to back.")] },
   { id: "d8", n: 8, phase: 2, title: "Guesstimates and strategy", hours: "about 6 hrs incl. 2 mocks",
+    primer: ["iima", 176, "SaaS", "pp. 176 to 180"], apps: "Notion and Slack",
     focus: "Clean estimation, then chain it into a growth or strategy question the way Swiggy does.",
-    learn: ["Re-check India anchors from memory. 10 min", ex("Watch 1 estimation and 1 strategy video; practise 2 Swiggy-tagged questions from the bank. 60 min")],
+    learn: [T("anchors", "Re-check India anchors from memory. 10 min"), ex("video", "Watch 1 estimation and 1 strategy video; practise 2 Swiggy-tagged questions from the bank. 60 min")],
     practice: [cb("sg-142"), "sw3", "jp4", cb("ia-240"), "g3", cb("sg-140"), "sw5", cb("sg-151")],
-    output: ["Mentor mock: one guesstimate plus one strategy question."] },
+    output: [T("mentor", "Mentor mock: one guesstimate plus one strategy question.")] },
   { id: "d9", n: 9, phase: 2, title: "Payments, data, tech and AI", hours: "about 6 hrs incl. 2 mocks",
+    primer: ["iima", 196, "AI", "pp. 196 to 201"], apps: "ChatGPT (or Claude) and Perplexity",
     focus: "Juspay's round types (data problem, fraud, UPI flows, possible coding) and AI product sense.",
-    learn: ["Practise 5 SQL queries on an orders table. 40 min", "Do one data problem: a public CSV, 3 insights, a recommendation (like Juspay's live data round). 60 min", ex("AI product sense lessons or 1 AI mock video, plus technical/SQL practice if you have time. 45 min")],
+    learn: [T("sql", "Practise 5 SQL queries on an orders table. 40 min"), T("data", "Do one data problem: a public CSV, 3 insights, a recommendation (like Juspay's live data round). 60 min"), ex("ai", "AI product sense lessons or 1 AI mock video, plus technical / SQL practice if you have time. 45 min")],
     practice: ["jpp7", "jp8", "jp6", "jpp3", "sw17", "a1", "a3", "a4", cb("ia-267")],
-    output: ["Mentor mock: one AI or payments case.", "If your Juspay loop may include coding, spend 60 minutes on basics (arrays, maps, a simple tree)."] },
+    output: [T("mentor", "Mentor mock: one AI or payments case."), T("code", "If your Juspay loop may include coding, spend 60 minutes on basics (arrays, maps, a simple tree).")] },
   { id: "d10", n: 10, phase: 2, title: "Company day + full mock loop", hours: "about 6 hrs",
+    primer: ["iima", 186, "HealthTech", "pp. 186 to 190"], apps: "Swiggy Dineout and CRED",
     focus: "Put it together for Juspay and Swiggy.",
-    learn: ["Use Swiggy, Instamart and a Juspay-powered checkout. Note 3 observations each. 45 min", ex("Behavioral peer mock (why this company, conflict, failure). 45 min")],
+    learn: [T("co", "Re-read the Juspay & Swiggy tab: process, what they test, your notes. 30 min"), ex("peer", "Behavioral peer mock (why this company, conflict, failure). 45 min")],
     practice: ["jp12", "jp1", "jp2", "sw10", "sw12", "b1", "b2", "b3", "b7"],
-    output: ["Full mock loop with a mentor: design, RCA, behavioral, back to back.", "Redo every case rated 1 or 2 stars.", "Write a one-page personal playbook for interview day."] }
+    output: [T("loop", "Full mock loop with a mentor: design, RCA, behavioral, back to back."), T("redo", "Redo every case or question rated 1 or 2 stars."), T("playbook", "Write a one-page personal playbook for interview day.")] }
 ];
-
-/* ============ State ============ */
-const QMAP = Object.fromEntries(Q.map(q => [q[0], { id: q[0], type: q[1], co: q[2], text: q[3], src: q[4], badge: q[5], hint: q[6] }]));
-const CMAP = Object.fromEntries(CASES.map(c => [c.id, c]));
-const ALL_CONCEPTS = CONCEPTS.flatMap(g => g.items);
-let state = { done: {}, flag: {}, notes: {}, rate: {}, start: null };
-const ui = { tab: "plan", type: "all", co: "all", status: "all", search: "", open: new Set(), openDays: null, focusCo: "Juspay", cbBook: "all", cbSeg: "all", cbStatus: "all", cbSearch: "" };
-const LS_KEY = "productprep-tracker-v2";
-try { const s = JSON.parse(localStorage.getItem(LS_KEY) || "null"); if (s) state = Object.assign(state, s); } catch (e) {}
-state.rate = state.rate || {};
-const TABS = ["plan", "bank", "focus", "cases", "concepts", "sources"];
-const h0 = (location.hash || "").slice(1); if (TABS.includes(h0)) ui.tab = h0;
-
-function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} }
-let dbRef = null, saveTimer = null, writing = false, dirty = false;
-function queueSave() { saveLocal(); if (!dbRef) return; clearTimeout(saveTimer); saveTimer = setTimeout(flush, 700); }
-async function flush() {
-  if (!dbRef) return;
-  if (writing) { dirty = true; return; }
-  writing = true; dirty = false; setSync("Saving…");
-  try { await dbRef.set(JSON.parse(JSON.stringify(state))); setSync("Saved to your tracker"); }
-  catch (e) { setSync(e && e.code === "invalid_argument" ? "Read-only view: progress saves on this device only" : "Couldn't save just now. Progress is kept on this device."); }
-  writing = false; if (dirty) flush();
-}
-function setSync(t) { const el = document.getElementById("sync"); if (el) el.textContent = t; }
-(async () => {
-  let db = null;
-  try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch (e) { db = null; }
-  if (!db) return;
-  dbRef = db.doc("tracker/state");
-  let first = true;
-  dbRef.onSnapshot(snap => {
-    if (snap.metadata.hasPendingWrites) return;
-    if (snap.exists) {
-      const r = JSON.parse(JSON.stringify(snap.data()));
-      const merged = { done: r.done || {}, flag: r.flag || {}, notes: r.notes || {}, rate: r.rate || {}, start: r.start || null };
-      if (!snap.metadata.fromCache) first = false;
-      if (JSON.stringify(merged) !== JSON.stringify(state)) {
-        const a = document.activeElement; if (a && a.classList && a.classList.contains("note")) return;
-        state = merged; saveLocal(); render(); if (viewer.open) renderViewerSide();
-      }
-      setSync("Synced to your tracker");
-    } else if (!snap.metadata.fromCache && first) { first = false; queueSave(); }
-  }, () => setSync("Sync paused. Progress is kept on this device."));
-})();
-
-/* ============ Helpers ============ */
-const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const taskIds = d => [...d.learn.map((_, i) => `${d.id}-l${i}`), ...d.output.map((_, i) => `${d.id}-o${i}`)];
-const itemKey = p => p.startsWith("cb:") ? p.slice(3) : p;
-const dayItems = d => [...taskIds(d), ...d.practice.map(itemKey)];
-const countDone = ids => ids.filter(id => state.done[id]).length;
-function todayIndex() { if (!state.start) return null; const s = new Date(state.start + "T00:00:00"); const n = new Date(); n.setHours(0,0,0,0); return Math.floor((n - s) / 86400000) + 1; }
-function dayDate(n) { if (!state.start) return ""; const d = new Date(state.start + "T00:00:00"); d.setDate(d.getDate() + n - 1); return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }); }
-const starStr = r => `<span class="stars" aria-label="${r ? r + " of 5" : "not rated"}">${[1,2,3,4,5].map(i => i <= (r || 0) ? "★" : '<span class="off">★</span>').join("")}</span>`;
-const srcLink = k => { const s = SRC[k]; if (!s) return ""; return `<a href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])}</a>`; };
-
-/* ============ Render ============ */
-function renderStats() {
-  const allTasks = DAYS.flatMap(taskIds);
-  const tDone = countDone(allTasks), qDone = countDone(Q.map(q => q[0])), cDone = countDone(ALL_CONCEPTS.map(c => c.id));
-  const casesDone = CASES.filter(c => state.done[c.id]).length;
-  const rated = CASES.map(c => state.rate[c.id]).filter(Boolean);
-  const avg = rated.length ? (rated.reduce((a, b) => a + b, 0) / rated.length).toFixed(1) : "none yet";
-  const ti = todayIndex();
-  const dayLabel = ti == null ? "Not started" : ti < 1 ? `Starts in ${1 - ti}d` : ti > 10 ? "Plan done" : `Day ${ti}`;
-  const pct = (a, b) => Math.round(a / b * 100);
-  document.getElementById("stats").innerHTML = `
-    <div class="stat"><div class="k">Where you are</div><div class="v">${dayLabel}</div>
-      <label for="startDate" class="s" style="display:block">Day 1 starts on</label><input type="date" id="startDate" value="${state.start || ""}"></div>
-    <div class="stat"><div class="k">Schedule tasks</div><div class="v">${tDone}<small> / ${allTasks.length}</small></div><div class="bar"><i style="width:${pct(tDone, allTasks.length)}%"></i></div></div>
-    <div class="stat"><div class="k">Real questions</div><div class="v">${qDone}<small> / ${Q.length}</small></div><div class="bar"><i style="width:${pct(qDone, Q.length)}%"></i></div></div>
-    <div class="stat"><div class="k">Casebook cases</div><div class="v">${casesDone}<small> / ${CASES.length}</small></div><div class="bar"><i style="width:${pct(casesDone, CASES.length)}%"></i></div><div class="s">Avg rating: ${avg}</div></div>
-    <div class="stat"><div class="k">Concepts</div><div class="v">${cDone}<small> / ${ALL_CONCEPTS.length}</small></div><div class="bar"><i style="width:${pct(cDone, ALL_CONCEPTS.length)}%"></i></div><div class="s">${Object.keys(state.flag).filter(k => state.flag[k]).length} flagged to revisit</div></div>`;
-}
-
-function qRow(id) {
-  const q = QMAP[id]; const t = TYPES.find(x => x.id === q.type);
-  const done = !!state.done[id], flag = !!state.flag[id], open = ui.open.has(id), b = BADGE[q.badge];
-  return `<div class="row ${done ? "is-done" : ""}">
-    <input type="checkbox" class="check" id="cb-${id}" data-toggle="${id}" ${done ? "checked" : ""} aria-label="Mark practised">
-    <div class="txt"><label class="q" for="cb-${id}">${esc(q.text)}</label>
-      <div class="tags">${q.co !== "Various" ? `<span class="tag co">${esc(q.co)}</span>` : ""}<span class="tag">${esc(t.name)}</span><span class="tag ${b[1]}" title="${esc(b[2])}">${b[0]}</span>${state.notes[id] ? '<span class="tag plain">notes</span>' : ""}</div>
-      ${open ? `<div class="more"><div class="hint"><strong>How to approach:</strong> ${esc(q.hint)}</div>
-        ${q.src ? `<div class="srcl">Source: ${srcLink(q.src)}</div>` : ""}
-        <textarea class="note" id="note-${id}" data-note="${id}" placeholder="Your notes, mentor feedback, what to fix next time">${esc(state.notes[id] || "")}</textarea></div>` : ""}
-    </div>
-    <div class="actions"><button class="icon-btn" data-expand="${id}" aria-expanded="${open}">${open ? "Hide" : "Hint & notes"}</button>
-      <button class="icon-btn" data-flag="${id}" aria-pressed="${flag}">${flag ? "Revisit" : "Flag"}</button></div></div>`;
-}
-function caseRow(id) {
-  const c = CMAP[id]; const done = !!state.done[id];
-  return `<div class="row ${done ? "is-done" : ""}">
-    <input type="checkbox" class="check" id="cb-${id}" data-toggle="${id}" ${done ? "checked" : ""} aria-label="Mark case attempted">
-    <div class="txt"><label class="q" for="cb-${id}">${esc(c.name)}</label> <span class="srcl">${esc(c.prompt)}</span>
-      <div class="tags"><span class="tag co">${BOOKS[c.book].short} p.${c.page}</span><span class="tag">${SEGS[c.seg]}</span>${c.lvl ? `<span class="tag plain">${c.lvl}</span>` : ""}${c.asked ? `<span class="tag rep">Asked at ${esc(c.asked)}</span>` : ""}${starStr(state.rate[id])}</div></div>
-    <div class="actions"><button class="icon-btn primary" data-case="${id}">Open case</button></div></div>`;
-}
-function taskRow(id, task) {
-  const done = !!state.done[id]; const text = typeof task === "string" ? task : task.t;
-  const ref = typeof task === "object" && task.ref ? `<button class="icon-btn" data-read="${task.ref[0]}:${task.ref[1]}">Read p.${task.ref[1]}</button>` : "";
-  const src = typeof task === "object" && task.src ? `<span class="tag src-${task.src === "D&C" ? "dc" : task.src.toLowerCase()}">${esc(task.src)}</span> ` : "";
-  return `<div class="row ${done ? "is-done" : ""}"><input type="checkbox" class="check" id="cb-${id}" data-toggle="${id}" ${done ? "checked" : ""}>
-    <div class="txt">${src}<label class="q" for="cb-${id}" style="font-weight:400">${esc(text)}</label></div><div class="actions">${ref}</div></div>`;
-}
-
-function renderPlan() {
-  const ti = todayIndex();
-  if (ui.openDays === null) {
-    ui.openDays = new Set();
-    const pick = (ti && ti >= 1 && ti <= 10) ? `d${ti}` : (DAYS.find(d => countDone(dayItems(d)) < dayItems(d).length) || DAYS[0]).id;
-    ui.openDays.add(pick);
-  }
-  const card = d => {
-    const items = dayItems(d), dn = countDone(items), complete = dn === items.length, isToday = ti === d.n;
-    return `<details class="day ${isToday ? "today" : ""} ${complete ? "complete" : ""}" data-day="${d.id}" ${ui.openDays.has(d.id) ? "open" : ""}>
-      <summary><div class="daynum">${d.n}</div><div class="daytitle"><h3>${esc(d.title)}</h3><div class="meta">${state.start ? dayDate(d.n) + " · " : ""}${esc(d.hours)}</div></div>
-        <span class="pill ${isToday ? "today" : complete ? "done" : ""}">${isToday ? "Today · " : ""}${dn}/${items.length}</span></summary>
-      <div class="daybody"><p class="focus">${esc(d.focus)}</p>
-        <div class="block"><h4>Learn</h4>${d.learn.map((t, i) => taskRow(`${d.id}-l${i}`, t)).join("")}</div>
-        <div class="block"><h4>Practise out loud</h4>${d.practice.map(p => p.startsWith("cb:") ? caseRow(p.slice(3)) : qRow(p)).join("")}</div>
-        <div class="block"><h4>Produce</h4>${d.output.map((t, i) => taskRow(`${d.id}-o${i}`, t)).join("")}</div>
-        ${d.tip ? `<div class="tip">${esc(d.tip)}</div>` : ""}</div></details>`;
-  };
-  return `<div class="section-head"><h2>Your 10-day plan</h2><p>Days 1 to 3 build breadth: skim Decode and Conquer for frameworks, read the casebook theory, and watch Exponent mocks to hear good answers. Days 4 to 10 go deep on one case type a day, with an Exponent peer mock and a mentor mock most days. Practice mixes reported questions with casebook cases, weighted towards Juspay and Swiggy. Set your start date above to see dates.</p></div>
-    <section class="phase"><h3>Your resources and how the plan uses them</h3><div class="co-grid">${RES.map(r => `<div class="panel"><h3 style="font-size:16px">${esc(r.name)}</h3><p><strong>${esc(r.role)}</strong> ${esc(r.how)}</p></div>`).join("")}</div></section>
-    <section class="phase"><h3>Phase 1 · Breadth on your own (Days 1 to 3)</h3>${DAYS.filter(d => d.phase === 1).map(card).join("")}</section>
-    <section class="phase"><h3>Phase 2 · Seven days with experienced PMs (Days 4 to 10)</h3>${DAYS.filter(d => d.phase === 2).map(card).join("")}</section>
-    <section class="phase"><h3>After day 10</h3><div class="tip">Two cases a day: one from the Casebooks tab filtered to "Not attempted", one from Real questions filtered to your target company. Redo anything rated 1 or 2 stars within 3 days.</div></section>`;
-}
-
-function bankFilter(q) {
-  const s = ui.search.trim().toLowerCase();
-  return (ui.type === "all" || q.type === ui.type)
-    && (ui.co === "all" || q.co === ui.co)
-    && (ui.status === "all" || (ui.status === "todo" && !state.done[q.id]) || (ui.status === "done" && state.done[q.id]) || (ui.status === "flag" && state.flag[q.id]) || (ui.status === "rep" && q.badge === "R"))
-    && (!s || (q.text + " " + q.co + " " + q.hint).toLowerCase().includes(s));
-}
-function renderBank() {
-  const all = Q.map(q => QMAP[q[0]]);
-  const cos = [...new Set(all.map(q => q.co))].sort((a, b) => a === "Various" ? 1 : b === "Various" ? -1 : a.localeCompare(b));
-  const chips = [`<button class="chip" data-type="all" aria-pressed="${ui.type === "all"}">All<span class="n">${countDone(all.map(q => q.id))}/${all.length}</span></button>`,
-    ...TYPES.map(t => { const ids = all.filter(q => q.type === t.id).map(q => q.id); return ids.length ? `<button class="chip" data-type="${t.id}" aria-pressed="${ui.type === t.id}">${esc(t.name)}<span class="n">${countDone(ids)}/${ids.length}</span></button>` : ""; })].join("");
-  const groups = TYPES.map(t => {
-    const qs = all.filter(q => q.type === t.id).filter(bankFilter);
-    return qs.length ? `<section class="cat"><header><h3>${esc(t.name)}</h3><p>${esc(t.blurb)}</p></header>${qs.map(q => qRow(q.id)).join("")}</section>` : "";
-  }).join("");
-  const nRep = all.filter(q => q.badge === "R").length;
-  return `<div class="section-head"><h2>Real questions</h2><p>${all.length} questions, ${nRep} of them reported as asked. They come from candidate reports (Glassdoor, Grapevine, Medium write-ups), question banks that tag the company (PM Exercises, Aced/Exponent) and interview guides. Open "Hint & notes" to see each source. The casebooks' ${CASES.length} cases have their own tab.</p></div>
-    <div class="legend"><span><span class="tag rep">Reported</span> a candidate or company-tagged bank says it was asked</span><span><span class="tag gd">Guide</span> typical question per a prep guide</span><span><span class="tag plain">Practice</span> written for the company's business, not reported</span></div>
-    <div class="filters">${chips}</div>
-    <div class="filters"><input class="search" id="qsearch" type="search" placeholder="Search: UPI, churn, Instamart…" value="${esc(ui.search)}">
-      <select class="sel" id="qco" aria-label="Company"><option value="all">All companies</option>${cos.map(c => `<option value="${esc(c)}" ${ui.co === c ? "selected" : ""}>${esc(c === "Various" ? "Multiple / general" : c)}</option>`).join("")}</select>
-      <select class="sel" id="qstatus" aria-label="Status">${[["all","All statuses"],["rep","Reported only"],["todo","Not done"],["done","Done"],["flag","Flagged"]].map(o => `<option value="${o[0]}" ${ui.status === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select></div>
-    ${groups || '<p class="srcl">No questions match these filters.</p>'}`;
-}
+DAYS.forEach(d => {
+  d.habits = [
+    { k: "primer", t: `Industry primer: ${d.primer[2]} (IIMA ${d.primer[3]}). 20 min`, ref: [d.primer[0], d.primer[1]], src: "Primer" },
+    { k: "apps", t: `Explore ${d.apps}. For each: who it's for, the core job, one thing you'd change, one metric. 20 min`, src: "Apps" }
+  ];
+});
 
 const FOCUS = {
   Juspay: {
@@ -825,14 +700,246 @@ const FOCUS = {
     srcs: ["gd_sw_apm", "gd_sw_pm", "pmx_sw", "pmx_sw_rca", "exp_sw", "exp_sw_rest", "hs_sw", "df_sw", "htc_sw", "md_sw20", "iq_sw_ba"]
   }
 };
+/* ============ State ============ */
+const QMAP = Object.fromEntries(Q.map(q => [q[0], { id: q[0], type: q[1], co: q[2], text: q[3], src: q[4], badge: q[5], hint: q[6] }]));
+const CMAP = Object.fromEntries(CASES.map(c => [c.id, c]));
+const ALL_CONCEPTS = CONCEPTS.flatMap(g => g.items);
+const blank = () => ({ done: {}, flag: {}, notes: {}, rate: {}, start: null });
+let state = blank();
+const ui = { tab: "today", type: "all", co: "all", status: "all", search: "", open: new Set(), openDays: null, focusCo: "Juspay", cbBook: "all", cbSeg: "all", cbStatus: "all", cbSearch: "", backupMsg: "", showBackup: false, restoreArmed: false, restoreMsg: "" };
+const LS_KEY = "productprep-tracker-v3";
+function normalize(s) { const b = blank(); if (!s || typeof s !== "object") return b; return { done: s.done || {}, flag: s.flag || {}, notes: s.notes || {}, rate: s.rate || {}, start: s.start || null }; }
+try { const s = JSON.parse(localStorage.getItem(LS_KEY) || "null"); if (s) state = normalize(s); } catch (e) {}
+const TABS = ["today", "plan", "bank", "focus", "cases", "concepts", "sources"];
+const h0 = (location.hash || "").slice(1); if (TABS.includes(h0)) ui.tab = h0;
+
+/* Theme: explicit choice wins; otherwise follow the system. */
+function effectiveTheme() { const t = document.documentElement.dataset.theme; if (t === "dark" || t === "light") return t; return window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+function paintThemeBtn() { const l = document.getElementById("themeLbl"); if (l) l.textContent = effectiveTheme() === "dark" ? "Light mode" : "Dark mode"; }
+try { const t = localStorage.getItem("pp-theme"); if (t === "dark" || t === "light") document.documentElement.dataset.theme = t; } catch (e) {}
+paintThemeBtn();
+try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", paintThemeBtn); } catch (e) {}
+
+/* Saving: the artifact's own store on claude.ai is the record; this browser keeps a copy. */
+function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} }
+let dbRef = null, saveTimer = null, writing = false, dirty = false, lastSaved = null;
+function queueSave() { saveLocal(); if (!dbRef) return; clearTimeout(saveTimer); saveTimer = setTimeout(flush, 600); }
+async function flush() {
+  if (!dbRef) return;
+  if (writing) { dirty = true; return; }
+  writing = true; dirty = false; setSync("Saving…");
+  try { await dbRef.set(JSON.parse(JSON.stringify(state))); lastSaved = new Date(); setSync(`Saved to your tracker on claude.ai · ${lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`); }
+  catch (e) { setSync(e && e.code === "invalid_argument" ? "Read-only view: progress is kept in this browser only" : "Couldn't reach the tracker's storage. Progress is kept in this browser and will save on your next change."); }
+  writing = false; if (dirty) flush();
+}
+function setSync(t) { const el = document.getElementById("sync"); if (el) el.textContent = t; }
+(async () => {
+  let db = null;
+  try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch (e) { db = null; }
+  if (!db) { setSync("Saving in this browser only (the tracker's storage isn't available in this view)"); return; }
+  dbRef = db.doc("tracker/state");
+  let first = true;
+  dbRef.onSnapshot(snap => {
+    if (snap.metadata.hasPendingWrites) return;
+    if (snap.exists) {
+      const merged = normalize(JSON.parse(JSON.stringify(snap.data())));
+      const localHasMore = first && Object.keys(state.done).length > Object.keys(merged.done).length;
+      if (!snap.metadata.fromCache) first = false;
+      if (localHasMore) { queueSave(); return; }
+      if (JSON.stringify(merged) !== JSON.stringify(state)) {
+        const a = document.activeElement; if (a && a.classList && (a.classList.contains("note") || a.classList.contains("io"))) return;
+        state = merged; saveLocal(); render();
+      }
+      setSync("Synced with your tracker on claude.ai");
+    } else if (!snap.metadata.fromCache && first) { first = false; queueSave(); }
+  }, () => setSync("Sync paused. Progress is kept in this browser."));
+})();
+
+/* ============ Helpers ============ */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const allTasks = d => [...d.habits, ...d.learn, ...d.output];
+const taskId = (d, t) => `${d.id}-${t.k}`;
+const itemKey = p => p.startsWith("cb:") ? p.slice(3) : p;
+const dayItems = d => [...allTasks(d).map(t => taskId(d, t)), ...d.practice.map(itemKey)];
+const countDone = ids => ids.filter(id => state.done[id]).length;
+const pdfHref = (book, page) => `${BOOKS[book].file}#page=${page}`;
+const pdfLink = (book, page, label) => `<a class="icon-btn" href="${pdfHref(book, page)}" target="_blank" rel="noopener">${label || "Open p." + page} ↗</a>`;
+function todayIndex() { if (!state.start) return null; const s = new Date(state.start + "T00:00:00"); const n = new Date(); n.setHours(0,0,0,0); return Math.round((n - s) / 86400000) + 1; }
+function dayDate(n) { if (!state.start) return ""; const d = new Date(state.start + "T00:00:00"); d.setDate(d.getDate() + n - 1); return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }); }
+const srcLink = k => { const s = SRC[k]; if (!s) return ""; return `<a href="${s[1]}" target="_blank" rel="noopener">${esc(s[0])}</a>`; };
+function rateHtml(id) {
+  const r = state.rate[id] || 0;
+  return `<span class="rate" role="group" aria-label="Rate how you did">${[1,2,3,4,5].map(i => `<button type="button" class="${i <= r ? "on" : ""}" data-rid="${id}" data-rate="${i}" aria-label="${i} of 5${i === r ? ", selected" : ""}" title="${["", "Lost structure", "Shaky", "Solid, missed things", "Strong", "Interview-ready"][i]}">★</button>`).join("")}</span>`;
+}
+const avgOf = ids => { const r = ids.map(id => state.rate[id]).filter(Boolean); return r.length ? (r.reduce((a, b) => a + b, 0) / r.length).toFixed(1) : null; };
+
+/* ============ Rows ============ */
+function qRow(id) {
+  const q = QMAP[id]; const t = TYPES.find(x => x.id === q.type);
+  const done = !!state.done[id], flag = !!state.flag[id], open = ui.open.has(id), b = BADGE[q.badge];
+  return `<div class="row ${done ? "is-done" : ""}">
+    <input type="checkbox" class="check" id="cb-${id}" data-toggle="${id}" ${done ? "checked" : ""} aria-label="Mark practised">
+    <div class="txt"><label class="q" for="cb-${id}">${esc(q.text)}</label>
+      <div class="tags">${q.co !== "Various" ? `<span class="tag co">${esc(q.co)}</span>` : ""}<span class="tag">${esc(t.name)}</span><span class="tag ${b[1]}" title="${esc(b[2])}">${b[0]}</span>${state.notes[id] ? '<span class="tag plain">notes</span>' : ""}${rateHtml(id)}</div>
+      ${open ? `<div class="more"><div class="hint"><strong>How to approach:</strong> ${esc(q.hint)}</div>
+        ${q.src ? `<div class="srcl">Source: ${srcLink(q.src)}</div>` : ""}
+        <textarea class="note" id="note-${id}" data-note="${id}" placeholder="Your notes, mentor feedback, what to fix next time">${esc(state.notes[id] || "")}</textarea></div>` : ""}
+    </div>
+    <div class="actions"><button class="icon-btn" data-expand="${id}" aria-expanded="${open}">${open ? "Hide" : "Hint & notes"}</button>
+      <button class="icon-btn" data-flag="${id}" aria-pressed="${flag}">${flag ? "Revisit" : "Flag"}</button></div></div>`;
+}
+function caseRow(id) {
+  const c = CMAP[id]; const done = !!state.done[id], flag = !!state.flag[id], open = ui.open.has(id);
+  return `<div class="row ${done ? "is-done" : ""}">
+    <input type="checkbox" class="check" id="cb-${id}" data-toggle="${id}" ${done ? "checked" : ""} aria-label="Mark case attempted">
+    <div class="txt"><label class="q" for="cb-${id}">${esc(c.name)}</label> <span class="srcl">${esc(c.prompt)}</span>
+      <div class="tags"><span class="tag co">${BOOKS[c.book].short} p.${c.page}</span><span class="tag">${SEGS[c.seg]}</span>${c.lvl ? `<span class="tag plain">${c.lvl}</span>` : ""}${c.asked ? `<span class="tag rep">Asked at ${esc(c.asked)}</span>` : ""}${state.notes[id] ? '<span class="tag plain">notes</span>' : ""}${rateHtml(id)}</div>
+      ${open ? `<div class="more"><textarea class="note" id="note-${id}" data-note="${id}" placeholder="What went well, what you missed, mentor feedback">${esc(state.notes[id] || "")}</textarea></div>` : ""}</div>
+    <div class="actions">${pdfLink(c.book, c.page, "Open case")}<button class="icon-btn" data-expand="${id}" aria-expanded="${open}">${open ? "Hide" : "Notes"}</button><button class="icon-btn" data-flag="${id}" aria-pressed="${flag}">${flag ? "Revisit" : "Flag"}</button></div></div>`;
+}
+function taskRow(d, task) {
+  const id = taskId(d, task), done = !!state.done[id];
+  const ref = task.ref ? pdfLink(task.ref[0], task.ref[1], "Read p." + task.ref[1]) : "";
+  const src = task.src ? `<span class="tag src-${task.src === "D&C" ? "dc" : task.src.toLowerCase()}">${esc(task.src)}</span> ` : "";
+  return `<div class="row ${done ? "is-done" : ""}"><input type="checkbox" class="check" id="cb-${id}" data-toggle="${id}" ${done ? "checked" : ""}>
+    <div class="txt">${src}<label class="q" for="cb-${id}" style="font-weight:400">${esc(task.t)}</label></div><div class="actions">${ref}</div></div>`;
+}
+const practiceRow = p => p.startsWith("cb:") ? caseRow(p.slice(3)) : qRow(p);
+function dayBlocks(d) {
+  return `<div class="block"><h4>Daily habits</h4>${d.habits.map(t => taskRow(d, t)).join("")}</div>
+    <div class="block"><h4>Learn</h4>${d.learn.map(t => taskRow(d, t)).join("")}</div>
+    <div class="block"><h4>Practise out loud, then rate yourself</h4>${d.practice.map(practiceRow).join("")}</div>
+    <div class="block"><h4>Produce</h4>${d.output.map(t => taskRow(d, t)).join("")}</div>
+    ${d.tip ? `<div class="tip">${esc(d.tip)}</div>` : ""}`;
+}
+
+/* ============ Stats ============ */
+function renderStats() {
+  const planIds = DAYS.flatMap(d => allTasks(d).map(t => taskId(d, t)));
+  const tDone = countDone(planIds);
+  const qIds = Q.map(q => q[0]), qDone = countDone(qIds), qAvg = avgOf(qIds);
+  const cIds = CASES.map(c => c.id), casesDone = countDone(cIds), cAvg = avgOf(cIds);
+  const coDone = countDone(ALL_CONCEPTS.map(c => c.id));
+  const ti = todayIndex();
+  const dayLabel = ti == null ? "Not started" : ti < 1 ? `Starts in ${1 - ti}d` : ti > 10 ? "Plan done" : `Day ${ti}`;
+  const pct = (a, b) => Math.round(a / b * 100);
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><div class="k">Where you are</div><div class="v">${dayLabel}</div>
+      <label for="startDate" class="s" style="display:block">Day 1 starts on</label><input type="date" id="startDate" value="${state.start || ""}"></div>
+    <div class="stat"><div class="k">Schedule tasks</div><div class="v">${tDone}<small> / ${planIds.length}</small></div><div class="bar"><i style="width:${pct(tDone, planIds.length)}%"></i></div></div>
+    <div class="stat"><div class="k">Real questions</div><div class="v">${qDone}<small> / ${qIds.length}</small></div><div class="bar"><i style="width:${pct(qDone, qIds.length)}%"></i></div><div class="s">Avg rating: ${qAvg || "none yet"}</div></div>
+    <div class="stat"><div class="k">Casebook cases</div><div class="v">${casesDone}<small> / ${cIds.length}</small></div><div class="bar"><i style="width:${pct(casesDone, cIds.length)}%"></i></div><div class="s">Avg rating: ${cAvg || "none yet"}</div></div>
+    <div class="stat"><div class="k">Concepts</div><div class="v">${coDone}<small> / ${ALL_CONCEPTS.length}</small></div><div class="bar"><i style="width:${pct(coDone, ALL_CONCEPTS.length)}%"></i></div><div class="s">${Object.keys(state.flag).filter(k => state.flag[k]).length} flagged to revisit</div></div>`;
+}
+
+/* ============ Today ============ */
+function pickToday() {
+  const ti = todayIndex();
+  if (ti != null && ti >= 1 && ti <= 10) return { day: DAYS[ti - 1], mode: "dated", ti };
+  if (ti != null && ti > 10) return { day: null, mode: "after", ti };
+  if (ti != null && ti < 1) return { day: DAYS[0], mode: "before", ti };
+  return { day: DAYS.find(d => countDone(dayItems(d)) < dayItems(d).length) || DAYS[DAYS.length - 1], mode: "undated", ti };
+}
+function renderToday() {
+  const { day, mode, ti } = pickToday();
+  let head = "", body = "";
+  if (day) {
+    const items = dayItems(day), dn = countDone(items), p = Math.round(dn / items.length * 100);
+    const note = mode === "undated" ? "No start date set, so this shows the first day with unfinished work. Set Day 1's date above to follow the calendar."
+      : mode === "before" ? `Your plan starts in ${1 - ti} day${1 - ti === 1 ? "" : "s"}. Here's Day 1 so you can get ready.` : "";
+    head = `<div class="today-head"><div><div class="kicker" style="margin:0">Day ${day.n} of 10${state.start ? " · " + dayDate(day.n) : ""} · ${esc(day.hours)}</div>
+        <h2>${esc(day.title)}</h2><div class="meta">${esc(day.focus)}</div>${note ? `<div class="meta" style="margin-top:8px">${esc(note)}</div>` : ""}</div>
+      <div class="ring" style="--p:${p}" role="img" aria-label="${dn} of ${items.length} done today"><span>${dn}/${items.length}</span></div></div>`;
+    body = `<div class="card">${dayBlocks(day)}<div style="height:10px"></div></div>`;
+  } else {
+    const nextQ = Q.map(q => QMAP[q[0]]).filter(q => (q.co === "Juspay" || q.co === "Swiggy") && !state.done[q.id]).slice(0, 2);
+    const nextC = CASES.filter(c => !state.done[c.id]).slice(0, 2);
+    const weak = [...Q.map(q => q[0]), ...CASES.map(c => c.id)].filter(id => state.rate[id] && state.rate[id] <= 2).slice(0, 4);
+    head = `<div class="today-head"><div><div class="kicker" style="margin:0">Day ${ti} · after the 10-day plan</div><h2>Keep the reps going</h2><div class="meta">Two cases a day, plus a redo of anything rated 1 or 2 stars.</div></div></div>`;
+    body = `<div class="card"><div class="block"><h4>Redo</h4>${weak.length ? weak.map(id => CMAP[id] ? caseRow(id) : qRow(id)).join("") : '<p class="srcl">Nothing rated 1 or 2 stars. Good.</p>'}</div>
+      <div class="block"><h4>Next up</h4>${nextQ.map(q => qRow(q.id)).join("")}${nextC.map(c => caseRow(c.id)).join("")}</div><div style="height:10px"></div></div>`;
+  }
+  let carry = "";
+  const upto = mode === "dated" ? ti - 1 : mode === "after" ? 10 : 0;
+  if (upto > 0) {
+    const groups = DAYS.slice(0, upto).map(d => {
+      const tasks = allTasks(d).filter(t => !state.done[taskId(d, t)]);
+      const prac = d.practice.filter(p => !state.done[itemKey(p)]);
+      return (tasks.length || prac.length) ? `<div class="carry-day">Day ${d.n} · ${esc(d.title)}</div>${tasks.map(t => taskRow(d, t)).join("")}${prac.map(practiceRow).join("")}` : "";
+    }).join("");
+    const n = DAYS.slice(0, upto).reduce((a, d) => a + dayItems(d).filter(id => !state.done[id]).length, 0);
+    carry = n ? `<section class="card"><header><h3>Carried over (${n})</h3><p>Unfinished items from earlier days. Fit in what you can; drop reading before practice.</p></header>${groups}<div style="height:10px"></div></section>` : "";
+  }
+  return `${head}${carry}${body}${dataPanel()}`;
+}
+function dataPanel() {
+  const n = Object.keys(state.done).length + Object.keys(state.rate).length + Object.keys(state.notes).length;
+  return `<section class="card"><header><h3>Your data</h3>
+      <p>Every tick, rating and note saves to this tracker's own storage on claude.ai within a second, so it survives page updates, clearing this browser, and switching devices where you're signed in. This browser keeps a second copy. For your own copy, back up now and then.</p></header>
+    <div class="filters" style="margin-top:10px"><button class="icon-btn primary" data-act="copy">Copy backup</button><button class="icon-btn" data-act="showbackup">${ui.showBackup ? "Hide backup text" : "Show backup text"}</button><span class="srcl">${n} saved entries</span>${ui.backupMsg ? `<span class="okmsg">${esc(ui.backupMsg)}</span>` : ""}</div>
+    ${ui.showBackup ? `<textarea class="io" id="backupTxt" readonly>${esc(JSON.stringify(state))}</textarea>` : ""}
+    <div class="block" style="margin-top:12px"><h4>Restore from a backup</h4>
+      <textarea class="io" id="restoreTxt" placeholder="Paste backup text here"></textarea>
+      <div class="filters" style="margin-top:8px">${ui.restoreArmed ? `<span class="errmsg">This replaces all current progress.</span><button class="icon-btn primary" data-act="restore-confirm">Replace my progress</button><button class="icon-btn" data-act="restore-cancel">Cancel</button>` : `<button class="icon-btn" data-act="restore">Restore</button>`}${ui.restoreMsg ? `<span class="${ui.restoreMsg.startsWith("Restored") ? "okmsg" : "errmsg"}">${esc(ui.restoreMsg)}</span>` : ""}</div></div>
+    <div style="height:10px"></div></section>`;
+}
+
+/* ============ Schedule ============ */
+function renderPlan() {
+  const ti = todayIndex();
+  if (ui.openDays === null) { ui.openDays = new Set(); const { day } = pickToday(); if (day) ui.openDays.add(day.id); }
+  const card = d => {
+    const items = dayItems(d), dn = countDone(items), complete = dn === items.length, isToday = ti === d.n;
+    return `<details class="day ${isToday ? "today" : ""} ${complete ? "complete" : ""}" data-day="${d.id}" ${ui.openDays.has(d.id) ? "open" : ""}>
+      <summary><div class="daynum">${d.n}</div><div class="daytitle"><h3>${esc(d.title)}</h3><div class="meta">${state.start ? dayDate(d.n) + " · " : ""}${esc(d.hours)} · primer: ${esc(d.primer[2])}</div></div>
+        <span class="pill ${isToday ? "today" : complete ? "done" : ""}">${isToday ? "Today · " : ""}${dn}/${items.length}</span></summary>
+      <div class="daybody"><p class="focus">${esc(d.focus)}</p>${dayBlocks(d)}</div></details>`;
+  };
+  return `<div class="section-head"><h2>Your 10-day plan</h2><p>Days 1 to 3 build breadth: skim Decode and Conquer for frameworks, read the casebook theory, and watch Exponent mocks. Days 4 to 10 go deep on one case type a day, with an Exponent peer mock and a mentor mock most days. Every day also has one industry primer and two apps to explore.</p></div>
+    <section class="phase"><h3>Your resources and how the plan uses them</h3><div class="co-grid">${RES.map(r => `<div class="panel"><h3 style="font-size:16px">${esc(r.name)}</h3><p><strong>${esc(r.role)}</strong> ${esc(r.how)}</p></div>`).join("")}</div></section>
+    <section class="phase"><h3>Phase 1 · Breadth on your own (Days 1 to 3)</h3>${DAYS.filter(d => d.phase === 1).map(card).join("")}</section>
+    <section class="phase"><h3>Phase 2 · Seven days with experienced PMs (Days 4 to 10)</h3>${DAYS.filter(d => d.phase === 2).map(card).join("")}</section>
+    <section class="phase"><h3>After day 10</h3><div class="tip">The Today tab switches to two cases a day plus redos of anything rated 1 or 2 stars. Keep reading one primer and exploring two apps daily.</div></section>`;
+}
+
+/* ============ Real questions ============ */
+function bankFilter(q) {
+  const s = ui.search.trim().toLowerCase();
+  return (ui.type === "all" || q.type === ui.type)
+    && (ui.co === "all" || q.co === ui.co)
+    && (ui.status === "all" || (ui.status === "todo" && !state.done[q.id]) || (ui.status === "done" && state.done[q.id]) || (ui.status === "flag" && state.flag[q.id]) || (ui.status === "rep" && q.badge === "R") || (ui.status === "weak" && state.rate[q.id] && state.rate[q.id] <= 2))
+    && (!s || (q.text + " " + q.co + " " + q.hint).toLowerCase().includes(s));
+}
+function renderBank() {
+  const all = Q.map(q => QMAP[q[0]]);
+  const cos = [...new Set(all.map(q => q.co))].sort((a, b) => a === "Various" ? 1 : b === "Various" ? -1 : a.localeCompare(b));
+  const chips = [`<button class="chip" data-type="all" aria-pressed="${ui.type === "all"}">All<span class="n">${countDone(all.map(q => q.id))}/${all.length}</span></button>`,
+    ...TYPES.map(t => { const ids = all.filter(q => q.type === t.id).map(q => q.id); return ids.length ? `<button class="chip" data-type="${t.id}" aria-pressed="${ui.type === t.id}">${esc(t.name)}<span class="n">${countDone(ids)}/${ids.length}</span></button>` : ""; })].join("");
+  const groups = TYPES.map(t => {
+    const qs = all.filter(q => q.type === t.id).filter(bankFilter);
+    const avg = avgOf(all.filter(q => q.type === t.id).map(q => q.id));
+    return qs.length ? `<section class="cat"><header><h3>${esc(t.name)}${avg ? ` <span class="srcl">· avg ${avg}★</span>` : ""}</h3><p>${esc(t.blurb)}</p></header>${qs.map(q => qRow(q.id)).join("")}</section>` : "";
+  }).join("");
+  const nRep = all.filter(q => q.badge === "R").length;
+  return `<div class="section-head"><h2>Real questions</h2><p>${all.length} questions, ${nRep} of them reported as asked, from candidate reports (Glassdoor, Grapevine, Medium write-ups), company-tagged question banks (PM Exercises, Aced/Exponent) and interview guides. Rate each one after you practise it. The casebooks' ${CASES.length} cases have their own tab.</p></div>
+    <div class="legend"><span><span class="tag rep">Reported</span> a candidate or company-tagged bank says it was asked</span><span><span class="tag gd">Guide</span> typical question per a prep guide</span><span><span class="tag plain">Practice</span> written for the company's business, not reported</span></div>
+    <div class="filters">${chips}</div>
+    <div class="filters"><input class="search" id="qsearch" type="search" placeholder="Search: UPI, churn, Instamart…" value="${esc(ui.search)}">
+      <select class="sel" id="qco" aria-label="Company"><option value="all">All companies</option>${cos.map(c => `<option value="${esc(c)}" ${ui.co === c ? "selected" : ""}>${esc(c === "Various" ? "Multiple / general" : c)}</option>`).join("")}</select>
+      <select class="sel" id="qstatus" aria-label="Status">${[["all","All statuses"],["rep","Reported only"],["todo","Not done"],["done","Done"],["weak","Rated 1 to 2 stars"],["flag","Flagged"]].map(o => `<option value="${o[0]}" ${ui.status === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select></div>
+    ${groups || '<p class="srcl">No questions match these filters.</p>'}`;
+}
+
 function renderFocus() {
   const co = ui.focusCo, f = FOCUS[co];
   const qs = Q.map(q => QMAP[q[0]]).filter(q => q.co === co);
   const rep = qs.filter(q => q.badge !== "P"), prac = qs.filter(q => q.badge === "P");
   const cases = CASES.filter(c => c.asked === co);
   const list = a => `<ul>${a.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
-  return `<div class="section-head"><h2>Juspay &amp; Swiggy</h2><p>Only what's been reported for PM and APM roles at these two companies, plus prep that follows from it. Ticks here also count in the Real questions tab.</p></div>
+  const ids = [...qs.map(q => q.id), ...cases.map(c => c.id)], avg = avgOf(ids);
+  return `<div class="section-head"><h2>Juspay &amp; Swiggy</h2><p>Only what's been reported for PM and APM roles at these two companies, plus prep that follows from it. Ticks and ratings here also count in the other tabs.</p></div>
     <div class="cotabs">${["Juspay", "Swiggy"].map(c => `<button data-focus="${c}" aria-pressed="${co === c}">${c}</button>`).join("")}</div>
+    <p class="srcl" style="margin:-4px 0 14px">${countDone(ids)} of ${ids.length} attempted · average rating ${avg ? avg + "★" : "none yet"}</p>
     <div class="co-grid"><div class="panel"><h3>Interview process reported</h3>${list(f.process)}</div><div class="panel"><h3>What they test</h3>${list(f.tests)}</div></div>
     <div class="panel" style="margin-bottom:14px"><h3>Prep checklist</h3>${list(f.prep)}</div>
     <section class="cat"><header><h3>Questions reported for ${co}</h3><p>${rep.filter(q => q.badge === "R").length} reported, ${rep.filter(q => q.badge === "G").length} from guides. Open "Hint & notes" to see the source.</p></header>${rep.map(q => qRow(q.id)).join("")}</section>
@@ -846,26 +953,34 @@ function renderCases() {
   const s = ui.cbSearch.trim().toLowerCase();
   const base = CASES.filter(c => ui.cbBook === "all" || c.book === ui.cbBook);
   const list = base.filter(c => (ui.cbSeg === "all" || c.seg === ui.cbSeg)
-    && (ui.cbStatus === "all" || (ui.cbStatus === "todo" && !state.done[c.id]) || (ui.cbStatus === "done" && state.done[c.id]) || (ui.cbStatus === "weak" && state.rate[c.id] && state.rate[c.id] <= 2))
+    && (ui.cbStatus === "all" || (ui.cbStatus === "todo" && !state.done[c.id]) || (ui.cbStatus === "done" && state.done[c.id]) || (ui.cbStatus === "weak" && state.rate[c.id] && state.rate[c.id] <= 2) || (ui.cbStatus === "flag" && state.flag[c.id]))
     && (!s || (c.name + " " + c.prompt + " " + c.asked).toLowerCase().includes(s)));
   const segChips = [`<button class="chip" data-cbseg="all" aria-pressed="${ui.cbSeg === "all"}">All<span class="n">${base.filter(c => state.done[c.id]).length}/${base.length}</span></button>`,
     ...Object.keys(SEGS).map(k => { const n = base.filter(c => c.seg === k); return n.length ? `<button class="chip" data-cbseg="${k}" aria-pressed="${ui.cbSeg === k}">${SEGS[k]}<span class="n">${n.filter(c => state.done[c.id]).length}/${n.length}</span></button>` : ""; })].join("");
-  const card = c => `<button class="case ${state.done[c.id] ? "is-done" : ""}" data-case="${c.id}">
-      <div class="top"><span class="seg seg-${c.seg}">${SEGS[c.seg]}</span>${starStr(state.rate[c.id])}</div>
-      <h4>${esc(c.name)}</h4><div class="prompt">${esc(c.prompt)}</div>
-      <div class="foot"><span>${BOOKS[c.book].short} · p.${c.page}${c.lvl ? " · " + c.lvl : ""}</span>${c.asked ? `<span class="tag rep">Asked at ${esc(c.asked)}</span>` : ""}${state.notes[c.id] ? '<span class="tag plain">notes</span>' : ""}</div></button>`;
-  return `<div class="section-head"><h2>Casebooks</h2><p>${CASES.length} practice cases from the IIMA Product Mindset (2026-27) and IIMB Sigma (2026-27) casebooks. Click a case to open its page in the PDF, then rate how you did and add notes. "Asked at" is the company the casebook says asked it.</p></div>
-    <div class="kicker">Read first</div>
-    <div class="readlist">${READING.map(r => `<button data-read="${r.book}:${r.page}">${esc(r.name)}<span>${BOOKS[r.book].short} p.${r.page}</span></button>`).join("")}</div>
+  const card = c => {
+    const done = !!state.done[c.id], open = ui.open.has(c.id), flag = !!state.flag[c.id];
+    return `<article class="case ${done ? "is-done" : ""}">
+      <div class="top"><span class="seg seg-${c.seg}">${SEGS[c.seg]}</span>${c.asked ? `<span class="tag rep">Asked at ${esc(c.asked)}</span>` : ""}</div>
+      <h4><a href="${pdfHref(c.book, c.page)}" target="_blank" rel="noopener">${esc(c.name)} ↗</a></h4><div class="prompt">${esc(c.prompt)}</div>
+      <div class="meta">${BOOKS[c.book].short} · p.${c.page}${c.lvl ? " · " + c.lvl : ""}${state.notes[c.id] ? ' · <span class="tag plain">notes</span>' : ""}</div>
+      <div class="ctl"><label><input type="checkbox" class="check" data-toggle="${c.id}" ${done ? "checked" : ""}> Attempted</label>${rateHtml(c.id)}</div>
+      <div class="actions" style="justify-content:flex-start"><button class="icon-btn" data-expand="${c.id}" aria-expanded="${open}">${open ? "Hide notes" : "Notes"}</button><button class="icon-btn" data-flag="${c.id}" aria-pressed="${flag}">${flag ? "Revisit" : "Flag"}</button></div>
+      ${open ? `<textarea class="note" id="note-${c.id}" data-note="${c.id}" placeholder="What went well, what you missed, mentor feedback">${esc(state.notes[c.id] || "")}</textarea>` : ""}
+    </article>`;
+  };
+  const avg = avgOf(base.map(c => c.id));
+  return `<div class="section-head"><h2>Casebooks</h2><p>${CASES.length} practice cases from the IIMA Product Mindset (2026-27) and IIMB Sigma (2026-27) casebooks. A case name opens the PDF in a new tab at that page. Come back here to tick, rate and write notes. "Asked at" is the company the casebook says asked it.${avg ? ` Your average: ${avg}★.` : ""}</p></div>
+    <div class="kicker">Theory and industry primers</div>
+    <div class="readlist">${READING.map(r => `<a href="${pdfHref(r.book, r.page)}" target="_blank" rel="noopener">${esc(r.name)}<span>${BOOKS[r.book].short} p.${r.page} ↗</span></a>`).join("")}</div>
     <div class="filters">${[["all","Both books"],["iima","IIMA"],["sigma","Sigma (IIMB)"]].map(b => `<button class="chip" data-cbbook="${b[0]}" aria-pressed="${ui.cbBook === b[0]}">${b[1]}</button>`).join("")}</div>
     <div class="filters">${segChips}</div>
     <div class="filters"><input class="search" id="cbsearch" type="search" placeholder="Search cases: Swiggy, UPI, elderly…" value="${esc(ui.cbSearch)}">
-      <select class="sel" id="cbstatus" aria-label="Status">${[["all","All"],["todo","Not attempted"],["done","Attempted"],["weak","Rated 1 to 2 stars"]].map(o => `<option value="${o[0]}" ${ui.cbStatus === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select></div>
+      <select class="sel" id="cbstatus" aria-label="Status">${[["all","All"],["todo","Not attempted"],["done","Attempted"],["weak","Rated 1 to 2 stars"],["flag","Flagged"]].map(o => `<option value="${o[0]}" ${ui.cbStatus === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select></div>
     <div class="cbgrid">${list.map(card).join("") || '<p class="srcl">No cases match these filters.</p>'}</div>`;
 }
 
 function renderConcepts() {
-  return `<div class="section-head"><h2>Concepts &amp; frameworks</h2><p>Tick a concept when you can explain it in under a minute without notes. "Read" opens the matching casebook page.</p></div>
+  return `<div class="section-head"><h2>Concepts &amp; frameworks</h2><p>Tick a concept when you can explain it in under a minute without notes. "Read" opens the matching casebook page in a new tab.</p></div>
     ${CONCEPTS.map(g => `<h3 class="kicker" style="margin-top:20px">${esc(g.g)}</h3><div class="co-grid">${g.items.map(c => {
       const done = !!state.done[c.id];
       return `<article class="panel" style="${done ? "border-color:var(--good)" : ""}"><div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px">
@@ -873,111 +988,32 @@ function renderConcepts() {
         <div style="min-width:0"><h3 style="font-size:16px"><label for="cb-${c.id}">${esc(c.name)}</label></h3><p>${esc(c.what)}</p>
         ${c.list ? `<ul>${c.list.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
         ${c.ex ? `<p class="srcl">${esc(c.ex)}</p>` : ""}
-        ${c.ref ? `<p><button class="icon-btn" data-read="${c.ref[0]}:${c.ref[1]}">Read in ${BOOKS[c.ref[0]].short}, p.${c.ref[1]}</button></p>` : ""}</div></div></article>`;
+        ${c.ref ? `<p>${pdfLink(c.ref[0], c.ref[1], `Read in ${BOOKS[c.ref[0]].short}, p.${c.ref[1]}`)}</p>` : ""}</div></div></article>`;
     }).join("")}</div>`).join("")}`;
 }
 
 function renderSources() {
   const used = [...new Set(Q.map(q => q[4]).filter(Boolean))];
-  return `<div class="section-head"><h2>Sources and method</h2><p>I searched Glassdoor, Grapevine, Medium and Substack write-ups, LinkedIn posts, Blind, and company-tagged question banks for APM and PM-1 questions, with a separate pass for Juspay and Swiggy. No Reddit threads surfaced for these companies, so none are cited. Direct page fetches were blocked in my research environment, so details come from search-engine extracts of these pages. Questions marked Reported are as specific as the source allowed.</p></div>
+  return `<div class="section-head"><h2>Sources and method</h2><p>I searched Glassdoor, Grapevine, Medium and Substack write-ups, LinkedIn posts, Blind, and company-tagged question banks for APM and PM-1 questions, with a separate pass for Juspay and Swiggy. No Reddit threads surfaced for these companies, so none are cited. Direct page fetches were blocked in my research environment, so details come from search-engine extracts of these pages.</p></div>
     <div class="panel"><ul>${used.map(k => `<li>${srcLink(k)}</li>`).join("")}</ul></div>
     <h3 class="kicker" style="margin-top:20px">Also useful</h3>
     <div class="panel"><ul><li>${srcLink("hpm_rca")}</li><li>${srcLink("ag_ai")}</li><li>Decode and Conquer, Lewis Lin (CIRCLES)</li><li>Cracking the PM Interview, Gayle McDowell and Jackie Bavaro</li></ul></div>`;
 }
 
 function render() {
+  const y = window.scrollY;
   renderStats();
   document.querySelectorAll("nav.tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === ui.tab)));
-  const main = document.getElementById("main");
   const a = document.activeElement, aid = a && a.id, caret = a && (aid === "qsearch" || aid === "cbsearch") ? a.selectionStart : null;
-  main.innerHTML = { plan: renderPlan, bank: renderBank, focus: renderFocus, cases: renderCases, concepts: renderConcepts, sources: renderSources }[ui.tab]();
-  if (aid && !viewer.open) { const el = document.getElementById(aid); if (el) { el.focus(); if (caret != null && el.setSelectionRange) el.setSelectionRange(caret, caret); } }
-}
-
-/* ============ PDF viewer ============ */
-const viewer = { open: false, book: null, page: 1, caseId: null, zoom: 1, total: 0, task: null, returnFocus: null };
-const docs = {};
-let pdfjsPromise = null;
-function loadPdfJs() {
-  if (!pdfjsPromise) pdfjsPromise = new Promise((res, rej) => {
-    const s = document.createElement("script"); s.src = "vendor/pdf.min.js";
-    s.onload = () => { try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = "vendor/pdf.worker.min.js"; res(window.pdfjsLib); } catch (e) { rej(e); } };
-    s.onerror = () => { pdfjsPromise = null; rej(new Error("pdf.js failed to load")); };
-    document.head.appendChild(s);
-  });
-  return pdfjsPromise;
-}
-function getDoc(book) { if (!docs[book]) docs[book] = loadPdfJs().then(lib => lib.getDocument(BOOKS[book].file).promise).catch(e => { delete docs[book]; throw e; }); return docs[book]; }
-function openViewer(book, page, caseId) {
-  Object.assign(viewer, { open: true, book, page, caseId: caseId || null, zoom: 1, total: 0, returnFocus: document.activeElement });
-  const c = caseId ? CMAP[caseId] : null;
-  const title = c ? c.name : (READING.find(r => r.book === book && r.page === page) || {}).name || BOOKS[book].name;
-  document.getElementById("viewerRoot").innerHTML = `<div class="viewer" role="dialog" aria-modal="true" aria-label="${esc(title)}">
-    <div class="vbar"><div style="min-width:0"><h3>${esc(title)}</h3><div class="sub">${esc(BOOKS[book].name)}${c ? " · " + SEGS[c.seg] + (c.asked ? " · asked at " + esc(c.asked) : "") : ""}</div></div>
-      <div class="vctl"><button class="icon-btn" data-v="prev" aria-label="Previous page">‹ Prev</button><span class="pg" id="vpg">p. ${page}</span><button class="icon-btn" data-v="next" aria-label="Next page">Next ›</button>
-        <button class="icon-btn" data-v="zout" aria-label="Zoom out">−</button><button class="icon-btn" data-v="zin" aria-label="Zoom in">+</button>
-        <a class="icon-btn" id="vopen" href="${BOOKS[book].file}#page=${page}" target="_blank" rel="noopener">Open PDF</a>
-        <button class="icon-btn primary" data-v="close" id="vclose">Close</button></div></div>
-    <div class="vbody"><div class="canvaswrap" id="cwrap"><div class="vmsg" id="vmsg">Loading the casebook…</div><canvas id="vcanvas" hidden></canvas></div>
-      <aside class="vside" id="vside"></aside></div></div>`;
-  document.body.style.overflow = "hidden";
-  document.getElementById("vclose").focus();
-  renderViewerSide(); renderPdfPage();
-}
-function closeViewer() {
-  viewer.open = false; document.getElementById("viewerRoot").innerHTML = ""; document.body.style.overflow = "";
-  const y = window.scrollY; render(); window.scrollTo(0, y);
-}
-function renderViewerSide() {
-  const side = document.getElementById("vside"); if (!side) return;
-  const id = viewer.caseId;
-  if (!id) { side.innerHTML = `<div><div class="kicker">Reading</div><p class="srcl">Use Prev and Next (or the arrow keys) to page through. Close returns you to where you were.</p></div>`; return; }
-  const c = CMAP[id], r = state.rate[id] || 0, done = !!state.done[id];
-  side.innerHTML = `<div><div class="kicker">The case</div><p style="margin:0">${esc(c.prompt)}</p>
-      <p class="srcl">Try it out loud before reading the solution. It starts on p.${c.page}.</p></div>
-    <div><div class="kicker">How did you do?</div>
-      <div class="rate" role="radiogroup" aria-label="Self rating">${[1,2,3,4,5].map(i => `<button class="${i <= r ? "on" : ""}" data-rate="${i}" role="radio" aria-checked="${i === r}" aria-label="${i} star${i > 1 ? "s" : ""}">★</button>`).join("")}</div>
-      <div class="ratehelp">1 lost structure · 3 solid but missed things · 5 interview-ready</div></div>
-    <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" class="check" data-toggle="${id}" ${done ? "checked" : ""}> Attempted</label>
-    <div><div class="kicker">Notes</div><textarea class="note" id="vnote" data-note="${id}" placeholder="What went well, what you missed, mentor feedback">${esc(state.notes[id] || "")}</textarea></div>`;
-}
-async function renderPdfPage() {
-  const msg = document.getElementById("vmsg"), canvas = document.getElementById("vcanvas"), wrap = document.getElementById("cwrap");
-  if (!canvas) return;
-  const pg = document.getElementById("vpg"), op = document.getElementById("vopen");
-  const want = viewer.page, book = viewer.book;
-  if (pg) pg.textContent = `p. ${want}${viewer.total ? " / " + viewer.total : ""}`;
-  if (op) op.href = `${BOOKS[book].file}#page=${want}`;
-  try {
-    const doc = await getDoc(book);
-    if (!viewer.open || viewer.book !== book) return;
-    viewer.total = doc.numPages;
-    viewer.page = Math.min(Math.max(1, viewer.page), doc.numPages);
-    if (pg) pg.textContent = `p. ${viewer.page} / ${viewer.total}`;
-    const page = await doc.getPage(viewer.page);
-    if (viewer.task) { try { viewer.task.cancel(); } catch (e) {} }
-    const base = page.getViewport({ scale: 1 });
-    const availW = Math.max(260, wrap.clientWidth - 32), availH = Math.max(260, wrap.clientHeight - 32);
-    const fit = Math.min(availW / base.width, availH / base.height);
-    const scale = Math.max(fit, availW / base.width * 0.6) * viewer.zoom, dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    const vp = page.getViewport({ scale: scale * dpr });
-    canvas.width = Math.floor(vp.width); canvas.height = Math.floor(vp.height);
-    canvas.style.width = Math.floor(vp.width / dpr) + "px"; canvas.style.height = Math.floor(vp.height / dpr) + "px";
-    viewer.task = page.render({ canvasContext: canvas.getContext("2d"), viewport: vp });
-    await viewer.task.promise;
-    msg.hidden = true; canvas.hidden = false; wrap.scrollTop = 0;
-  } catch (e) {
-    if (e && e.name === "RenderingCancelledException") return;
-    if (!document.getElementById("vmsg")) return;
-    msg.hidden = false; canvas.hidden = true;
-    msg.innerHTML = `The page viewer couldn't load here. Use <a href="${BOOKS[viewer.book].file}#page=${viewer.page}" target="_blank" rel="noopener">Open PDF</a> to read page ${viewer.page} in a new tab. Rating and notes still work.`;
-  }
+  document.getElementById("main").innerHTML = { today: renderToday, plan: renderPlan, bank: renderBank, focus: renderFocus, cases: renderCases, concepts: renderConcepts, sources: renderSources }[ui.tab]();
+  if (aid) { const el = document.getElementById(aid); if (el) { try { el.focus({ preventScroll: true }); } catch (e) {} if (caret != null && el.setSelectionRange) el.setSelectionRange(caret, caret); } }
+  window.scrollTo(0, y);
 }
 
 /* ============ Events ============ */
 document.addEventListener("change", e => {
   const t = e.target;
-  if (t.dataset.toggle) { const id = t.dataset.toggle; if (t.checked) state.done[id] = true; else delete state.done[id]; queueSave(); if (viewer.open) renderStats(); else render(); }
+  if (t.dataset.toggle) { const id = t.dataset.toggle; if (t.checked) state.done[id] = true; else delete state.done[id]; queueSave(); render(); }
   else if (t.id === "startDate") { state.start = t.value || null; ui.openDays = null; queueSave(); render(); }
   else if (t.id === "qstatus") { ui.status = t.value; render(); }
   else if (t.id === "qco") { ui.co = t.value; render(); }
@@ -989,35 +1025,36 @@ document.addEventListener("input", e => {
   else if (t.id === "qsearch") { ui.search = t.value; render(); }
   else if (t.id === "cbsearch") { ui.cbSearch = t.value; render(); }
 });
+function copyBackup() {
+  const txt = JSON.stringify(state);
+  const done = ok => { ui.backupMsg = ok ? "Copied. Paste it somewhere safe (a note or an email to yourself)." : "Couldn't copy here. Select the text below and copy it."; if (!ok) ui.showBackup = true; render(); };
+  try { navigator.clipboard.writeText(txt).then(() => done(true), () => done(false)); } catch (e) { done(false); }
+}
+function doRestore() {
+  const el = document.getElementById("restoreTxt"); const raw = (el && el.value || ui.pendingRestore || "").trim();
+  try { const parsed = JSON.parse(raw); if (!parsed || typeof parsed !== "object" || typeof parsed.done !== "object") throw 0; state = normalize(parsed); ui.restoreMsg = "Restored."; queueSave(); }
+  catch (e) { ui.restoreMsg = "That doesn't look like a backup from this tracker. Nothing changed."; }
+  ui.restoreArmed = false; ui.pendingRestore = ""; render();
+}
 document.addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
   const d = b.dataset;
+  if (b.id === "themeBtn") { const next = effectiveTheme() === "dark" ? "light" : "dark"; document.documentElement.dataset.theme = next; try { localStorage.setItem("pp-theme", next); } catch (err) {} paintThemeBtn(); return; }
   if (d.tab) { ui.tab = d.tab; try { history.replaceState(null, "", "#" + ui.tab); } catch (err) {} render(); window.scrollTo({ top: 0 }); }
+  else if (d.rate && d.rid) { const id = d.rid, v = +d.rate; if (state.rate[id] === v) delete state.rate[id]; else { state.rate[id] = v; state.done[id] = true; } queueSave(); render(); }
   else if (d.flag) { if (state.flag[d.flag]) delete state.flag[d.flag]; else state.flag[d.flag] = true; queueSave(); render(); }
-  else if (d.expand) { ui.open.has(d.expand) ? ui.open.delete(d.expand) : ui.open.add(d.expand); render(); const n = document.getElementById("note-" + d.expand); if (n) n.focus(); }
+  else if (d.expand) { ui.open.has(d.expand) ? ui.open.delete(d.expand) : ui.open.add(d.expand); render(); const n = document.getElementById("note-" + d.expand); if (n) try { n.focus({ preventScroll: true }); } catch (err) {} }
   else if (d.type) { ui.type = d.type; render(); }
   else if (d.focus) { ui.focusCo = d.focus; render(); }
   else if (d.cbbook) { ui.cbBook = d.cbbook; render(); }
   else if (d.cbseg) { ui.cbSeg = d.cbseg; render(); }
-  else if (d.case) { const c = CMAP[d.case]; openViewer(c.book, c.page, c.id); }
-  else if (d.read) { const [bk, p] = d.read.split(":"); openViewer(bk, +p, null); }
-  else if (d.rate) { const id = viewer.caseId, v = +d.rate; if (!id) return; if (state.rate[id] === v) delete state.rate[id]; else { state.rate[id] = v; state.done[id] = true; } queueSave(); renderViewerSide(); renderStats(); }
-  else if (d.v) {
-    if (d.v === "close") closeViewer();
-    else if (d.v === "prev") { viewer.page = Math.max(1, viewer.page - 1); renderPdfPage(); }
-    else if (d.v === "next") { viewer.page = viewer.total ? Math.min(viewer.total, viewer.page + 1) : viewer.page + 1; renderPdfPage(); }
-    else if (d.v === "zin") { viewer.zoom = Math.min(3, viewer.zoom + 0.25); renderPdfPage(); }
-    else if (d.v === "zout") { viewer.zoom = Math.max(0.5, viewer.zoom - 0.25); renderPdfPage(); }
-  }
-});
-document.addEventListener("keydown", e => {
-  if (!viewer.open || (e.target && /TEXTAREA|INPUT/.test(e.target.tagName))) return;
-  if (e.key === "Escape") closeViewer();
-  else if (e.key === "ArrowRight") { viewer.page = viewer.total ? Math.min(viewer.total, viewer.page + 1) : viewer.page + 1; renderPdfPage(); }
-  else if (e.key === "ArrowLeft") { viewer.page = Math.max(1, viewer.page - 1); renderPdfPage(); }
+  else if (d.act === "copy") copyBackup();
+  else if (d.act === "showbackup") { ui.showBackup = !ui.showBackup; render(); }
+  else if (d.act === "restore") { const el = document.getElementById("restoreTxt"); ui.pendingRestore = el ? el.value : ""; if (!ui.pendingRestore.trim()) { ui.restoreMsg = "Paste your backup text first."; render(); return; } ui.restoreArmed = true; ui.restoreMsg = ""; render(); const r = document.getElementById("restoreTxt"); if (r) r.value = ui.pendingRestore; }
+  else if (d.act === "restore-confirm") doRestore();
+  else if (d.act === "restore-cancel") { ui.restoreArmed = false; ui.pendingRestore = ""; render(); }
 });
 document.addEventListener("toggle", e => { const d = e.target; if (!d.dataset || !d.dataset.day || !ui.openDays) return; if (d.open) ui.openDays.add(d.dataset.day); else ui.openDays.delete(d.dataset.day); }, true);
-let rsz; window.addEventListener("resize", () => { if (!viewer.open) return; clearTimeout(rsz); rsz = setTimeout(renderPdfPage, 200); });
 
 render();
 </script>
