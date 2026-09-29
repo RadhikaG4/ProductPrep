@@ -102,6 +102,9 @@ details.day.complete .daynum { background: var(--good-soft); color: var(--good);
 .tag.rep { background: var(--good-soft); color: var(--good); }
 .tag.gd { background: var(--warn-soft); color: var(--warn); }
 .tag.co { background: var(--ink); color: var(--bg); }
+.tag.src-dc { background: color-mix(in srgb, var(--s-improve) 16%, transparent); color: var(--s-improve); }
+.tag.src-iima, .tag.src-sigma { background: color-mix(in srgb, var(--s-pricing) 16%, transparent); color: var(--s-pricing); }
+.tag.src-exponent { background: color-mix(in srgb, var(--s-gtm) 16%, transparent); color: var(--s-gtm); }
 .srcl { font-size: 12px; color: var(--muted); }
 .actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .icon-btn { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; color: var(--muted); white-space: nowrap; text-decoration: none; display: inline-block; }
@@ -573,61 +576,83 @@ const CONCEPTS = [
 
 /* ============ Schedule ============ */
 const cb = id => "cb:" + id;
-const rd = (book, page, text) => ({ t: text, ref: [book, page] });
+const rd = (book, page, text) => ({ t: text, ref: [book, page], src: book === "iima" ? "IIMA" : "Sigma" });
+const dc = text => ({ t: text, src: "D&C" });
+const ex = text => ({ t: text, src: "Exponent" });
+const RES = [
+  { name: "Decode and Conquer (Lewis Lin)", role: "Skim for frameworks, don't read cover to cover.", how: "Days 1 to 3 only: the product design chapter (CIRCLES), metrics (AARM), estimation, and behavioral (DIGS). About 45 minutes a day. Read the framework pages and one worked answer per chapter." },
+  { name: "IIMA and IIMB (Sigma) casebooks", role: "Your theory and your practice cases.", how: "Theory pages are linked from each day's Learn list and open at the right page. Practice cases open from the plan or the Casebooks tab, where you rate yourself and keep notes." },
+  { name: "Exponent (paid)", role: "Watch how strong answers sound, then practise live.", how: "Days 1 to 3: the lessons for each case type plus 1 or 2 mock interview videos. Days 4 to 10: one video of the day's case type and one peer mock (book it the day before). Filter the question bank by company (Swiggy) for extra reps." },
+  { name: "Experienced PMs (mentors)", role: "Feedback on your weakest case type.", how: "One mock a day from Day 4. Bring your lowest-rated case type and your Flagged list. Log their feedback in the case's notes." }
+];
 const DAYS = [
-  { id: "d1", n: 1, phase: 1, title: "How PM interviews work + product design", hours: "6 to 7 hrs",
-    focus: "Understand the rounds, learn the design playbook from both casebooks, and run your first cases out loud.",
-    learn: [rd("iima", 7, "IIMA: What is product management (pp. 7 to 8). 20 min"), "Concepts tab: The APM loop in India, How to run any case. 30 min", rd("sigma", 8, "Sigma: Product design approach (pp. 8 to 9). 30 min"), rd("iima", 205, "IIMA: Product design do's and don'ts (from p. 205). 30 min"), rd("iima", 13, "IIMA: personas, JTBD, CIRCLES, prioritization (pp. 13 to 40). 90 min")],
+  { id: "d1", n: 1, phase: 1, title: "How PM interviews work + product design", hours: "about 7 hrs",
+    focus: "Get the design framework from three angles (book, casebooks, Exponent videos), then run your first cases out loud.",
+    learn: [dc("Skim the intro and the product design chapter (CIRCLES). Read one worked answer. 45 min"),
+      rd("iima", 7, "What is product management (pp. 7 to 8). 20 min"),
+      rd("sigma", 8, "Product design approach (pp. 8 to 9). 20 min"),
+      rd("iima", 13, "Personas, JTBD, CIRCLES, prioritization frameworks (pp. 13 to 40). Skim, stop at what's new. 60 min"),
+      ex("Product design / product sense lessons, then watch 2 product design mock videos. Note how they open and how they prioritize. 60 min")],
     practice: [cb("sg-10"), cb("sg-11"), cb("ia-272"), "i1", "d1"],
-    output: ["Draft your 90-second 'Tell me about yourself'.", "Write teardowns of 2 apps you use daily (users, core job, what works, one fix, one metric)."],
-    tip: "Say every practice answer out loud and time it. Read the casebook solution only after you've attempted the case, then rate yourself." },
-  { id: "d2", n: 2, phase: 1, title: "RCA, metrics and guesstimates", hours: "6 to 7 hrs",
+    output: ["Draft your 90-second 'Tell me about yourself'.", "Write your one-page product design checklist (your own version of CIRCLES)."],
+    tip: "Attempt each case out loud before opening the casebook solution. Time it at 25 minutes, then rate yourself." },
+  { id: "d2", n: 2, phase: 1, title: "RCA, metrics and guesstimates", hours: "about 7 hrs",
     focus: "The analytical round. RCA is the most reported question type in Indian APM loops, including at Swiggy and Juspay.",
-    learn: [rd("sigma", 62, "Sigma: RCA approach and framework (pp. 62 to 63). 30 min"), rd("iima", 231, "IIMA: Intro to RCA (pp. 231 to 233). 30 min"), rd("iima", 41, "IIMA: Metrics, HEART, AARRR, North Star, guardrails (pp. 41 to 49). 60 min"), rd("iima", 202, "IIMA: Guesstimate tips (pp. 202 to 204). 30 min"), rd("sigma", 159, "Sigma: Guesstimate datasheet (p. 159). Memorize it. 20 min")],
+    learn: [dc("Skim the metrics (AARM) and estimation chapters. 45 min"),
+      rd("sigma", 62, "RCA approach and framework (pp. 62 to 63). 20 min"),
+      rd("iima", 231, "Intro to RCA (pp. 231 to 233). 20 min"),
+      rd("iima", 41, "Metrics, HEART, AARRR, North Star, guardrails (pp. 41 to 49). 40 min"),
+      rd("iima", 202, "Guesstimate tips (pp. 202 to 204) + Sigma datasheet (p. 159). 30 min"),
+      ex("Analytical / metrics lessons, then watch 1 'metric dropped' mock and 1 estimation mock. 60 min")],
     practice: [cb("sg-64"), cb("sg-65"), "r1", "sw1", "g1", cb("sg-136"), cb("ia-291")],
-    output: ["Write a one-page RCA checklist from memory.", "Make a one-page metrics cheat sheet: north star and guardrails for a food marketplace, a payments product and a social app."],
+    output: ["Write a one-page RCA checklist from memory.", "Make a metrics cheat sheet: north star and guardrails for a food marketplace, a payments product and a social app."],
     tip: "In RCA, ask 'sudden or gradual?' and 'only us or the whole market?' in the first minute." },
-  { id: "d3", n: 3, phase: 1, title: "Strategy, payments, AI and your stories", hours: "6 to 7 hrs",
-    focus: "Cover the rest of the breadth, including the two sectors your target companies work in, and write your behavioral material.",
-    learn: [rd("iima", 212, "IIMA: Go-to-market and pricing (pp. 212 to 230). 60 min"), rd("iima", 150, "IIMA: FinTech sector primer (pp. 150 to 155). 30 min"), rd("iima", 160, "IIMA: Food tech (pp. 160 to 163) and Quick commerce (pp. 146 to 149). 40 min"), rd("iima", 115, "IIMA: LLMs, RAG, agentic AI (pp. 115 to 133). 45 min"), "Concepts tab: Payments 101, How UPI works, Payment orchestration. 30 min"],
+  { id: "d3", n: 3, phase: 1, title: "Strategy, payments, AI and your stories", hours: "about 7 hrs",
+    focus: "Cover the remaining breadth, the two sectors your target companies work in, and your behavioral material.",
+    learn: [dc("Skim the behavioral chapter (DIGS) and the pricing / strategy sections. 45 min"),
+      rd("iima", 212, "Go-to-market and pricing (pp. 212 to 230). Skim. 40 min"),
+      rd("iima", 150, "FinTech (pp. 150 to 155), Food tech (pp. 160 to 163), Quick commerce (pp. 146 to 149). 50 min"),
+      rd("iima", 115, "LLMs, RAG, agentic AI (pp. 115 to 133). Skim. 30 min"),
+      ex("Behavioral lessons + 1 AI product question video. Then filter the question bank to Swiggy and bookmark 10. 60 min"),
+      "Concepts tab: Payments 101, How UPI works, Payment orchestration. 30 min"],
     practice: [cb("ia-280"), cb("sg-92"), "a5", cb("ia-293"), "jp3", "sw26"],
-    output: ["Write 6 STAR stories and map each to 2 or 3 themes.", "Write your Juspay SOP answer (why Juspay, why PM) in under 200 words.", "List your 3 weakest areas for your first mentor session."],
-    tip: "Only have 2 days? Read Day 3's material in the evenings of Days 1 and 2, and move its practice to Day 4." },
-  { id: "d4", n: 4, phase: 2, title: "Product design, going deep", hours: "5 to 6 hrs + mentor mock",
+    output: ["Write 6 STAR stories and map each to 2 or 3 themes.", "Write your Juspay SOP answer (why Juspay, why PM) in under 200 words.", "Book tomorrow's Exponent peer mock (product design).", "List your 3 weakest areas for your first mentor session."],
+    tip: "Only have 2 days? Skip the D&C strategy sections and the AI reading, and move Day 3's practice to Day 4." },
+  { id: "d4", n: 4, phase: 2, title: "Product design, going deep", hours: "about 6 hrs incl. 2 mocks",
     focus: "Harder design prompts with India-specific users and real company prompts.",
-    learn: ["Re-read your Day 1 notes. Practise stating your structure in under 30 seconds."],
+    learn: [ex("Watch 1 product design mock on a harder prompt (accessibility or two-sided users). 30 min"), ex("Peer mock, product design. 45 min")],
     practice: [cb("sg-30"), cb("sg-46"), cb("sg-55"), cb("ia-250"), "d2", "d4", "sw11"],
-    output: ["Mentor mock: one design case. Log feedback in the case's notes and rate it."] },
-  { id: "d5", n: 5, phase: 2, title: "Improvement and favorite product", hours: "5 to 6 hrs + mentor mock",
+    output: ["Mentor mock: one design case. Log feedback in the case's notes and rate it.", "Book tomorrow's peer mock (product improvement)."] },
+  { id: "d5", n: 5, phase: 2, title: "Improvement and favorite product", hours: "about 6 hrs incl. 2 mocks",
     focus: "Improve existing products. Start from the product's goal and today's users.",
-    learn: ["Polish your favorite product answer to 3 minutes."],
+    learn: [ex("Watch 1 product improvement mock. 30 min"), ex("Peer mock, product improvement. 45 min")],
     practice: [cb("sg-126"), cb("sg-116"), cb("sg-114"), cb("sg-107"), "sw7", "sw13", "sw18"],
-    output: ["Mentor mock: one improvement case."] },
-  { id: "d6", n: 6, phase: 2, title: "Metrics and experimentation", hours: "5 to 6 hrs + mentor mock",
+    output: ["Mentor mock: one improvement case.", "Polish your favorite product answer to 3 minutes."] },
+  { id: "d6", n: 6, phase: 2, title: "Metrics and experimentation", hours: "about 6 hrs incl. 2 mocks",
     focus: "Success metrics, trade-off calls and A/B tests. Always end with a decision.",
-    learn: [rd("iima", 54, "IIMA: A/B testing, evals, precision and recall (pp. 54 to 62). 45 min")],
+    learn: [rd("iima", 54, "A/B testing, evals, precision and recall (pp. 54 to 62). 40 min"), ex("Watch 1 metrics / success-metric mock, then peer mock on metrics. 75 min")],
     practice: [cb("ia-288"), cb("ia-294"), cb("sg-153"), cb("sg-154"), "sw14", "m1", "jp5", "jpp8"],
     output: ["Mentor mock: one metrics case."] },
-  { id: "d7", n: 7, phase: 2, title: "RCA day", hours: "5 to 6 hrs",
+  { id: "d7", n: 7, phase: 2, title: "RCA day", hours: "about 6 hrs",
     focus: "Speed and structure on the case type you're most likely to face at both companies.",
-    learn: ["Re-read your RCA checklist. Add payment branches (bank, gateway, UPI app, method)."],
+    learn: ["Re-read your RCA checklist. Add payment branches (bank, gateway, UPI app, method). 20 min", ex("Peer mock, RCA. 45 min")],
     practice: [cb("sg-67"), cb("sg-82"), cb("sg-86"), cb("ia-309"), cb("ia-313"), "jp7", "jpp1", "sw2", "r6"],
     output: ["Timed drill: 3 RCA cases, 15 minutes each, back to back."] },
-  { id: "d8", n: 8, phase: 2, title: "Guesstimates and strategy", hours: "5 to 6 hrs + mentor mock",
+  { id: "d8", n: 8, phase: 2, title: "Guesstimates and strategy", hours: "about 6 hrs incl. 2 mocks",
     focus: "Clean estimation, then chain it into a growth or strategy question the way Swiggy does.",
-    learn: ["Re-check India anchors from memory."],
+    learn: ["Re-check India anchors from memory. 10 min", ex("Watch 1 estimation and 1 strategy video; practise 2 Swiggy-tagged questions from the bank. 60 min")],
     practice: [cb("sg-142"), "sw3", "jp4", cb("ia-240"), "g3", cb("sg-140"), "sw5", cb("sg-151")],
     output: ["Mentor mock: one guesstimate plus one strategy question."] },
-  { id: "d9", n: 9, phase: 2, title: "Payments, data, tech and AI", hours: "5 to 6 hrs + mentor mock",
+  { id: "d9", n: 9, phase: 2, title: "Payments, data, tech and AI", hours: "about 6 hrs incl. 2 mocks",
     focus: "Juspay's round types (data problem, fraud, UPI flows, possible coding) and AI product sense.",
-    learn: ["Practise 5 SQL queries on an orders table.", "Do one data problem: take a public CSV, find 3 insights, write a recommendation (like Juspay's live data round)."],
+    learn: ["Practise 5 SQL queries on an orders table. 40 min", "Do one data problem: a public CSV, 3 insights, a recommendation (like Juspay's live data round). 60 min", ex("AI product sense lessons or 1 AI mock video, plus technical/SQL practice if you have time. 45 min")],
     practice: ["jpp7", "jp8", "jp6", "jpp3", "sw17", "a1", "a3", "a4", cb("ia-267")],
     output: ["Mentor mock: one AI or payments case.", "If your Juspay loop may include coding, spend 60 minutes on basics (arrays, maps, a simple tree)."] },
-  { id: "d10", n: 10, phase: 2, title: "Company day + full mock loop", hours: "6 hrs",
+  { id: "d10", n: 10, phase: 2, title: "Company day + full mock loop", hours: "about 6 hrs",
     focus: "Put it together for Juspay and Swiggy.",
-    learn: ["Use Swiggy, Instamart and a Juspay-powered checkout. Note 3 observations each."],
+    learn: ["Use Swiggy, Instamart and a Juspay-powered checkout. Note 3 observations each. 45 min", ex("Behavioral peer mock (why this company, conflict, failure). 45 min")],
     practice: ["jp12", "jp1", "jp2", "sw10", "sw12", "b1", "b2", "b3", "b7"],
-    output: ["Full mock loop: design, RCA, behavioral, back to back.", "Redo every case rated 1 or 2 stars.", "Write a one-page personal playbook for interview day."] }
+    output: ["Full mock loop with a mentor: design, RCA, behavioral, back to back.", "Redo every case rated 1 or 2 stars.", "Write a one-page personal playbook for interview day."] }
 ];
 
 /* ============ State ============ */
@@ -730,8 +755,9 @@ function caseRow(id) {
 function taskRow(id, task) {
   const done = !!state.done[id]; const text = typeof task === "string" ? task : task.t;
   const ref = typeof task === "object" && task.ref ? `<button class="icon-btn" data-read="${task.ref[0]}:${task.ref[1]}">Read p.${task.ref[1]}</button>` : "";
+  const src = typeof task === "object" && task.src ? `<span class="tag src-${task.src === "D&C" ? "dc" : task.src.toLowerCase()}">${esc(task.src)}</span> ` : "";
   return `<div class="row ${done ? "is-done" : ""}"><input type="checkbox" class="check" id="cb-${id}" data-toggle="${id}" ${done ? "checked" : ""}>
-    <div class="txt"><label class="q" for="cb-${id}" style="font-weight:400">${esc(text)}</label></div><div class="actions">${ref}</div></div>`;
+    <div class="txt">${src}<label class="q" for="cb-${id}" style="font-weight:400">${esc(text)}</label></div><div class="actions">${ref}</div></div>`;
 }
 
 function renderPlan() {
@@ -752,7 +778,8 @@ function renderPlan() {
         <div class="block"><h4>Produce</h4>${d.output.map((t, i) => taskRow(`${d.id}-o${i}`, t)).join("")}</div>
         ${d.tip ? `<div class="tip">${esc(d.tip)}</div>` : ""}</div></details>`;
   };
-  return `<div class="section-head"><h2>Your 10-day plan</h2><p>Days 1 to 3 build breadth on your own using the casebooks' primers. Days 4 to 10 go deep on one case type a day, with a mentor mock most days. Practice mixes reported questions with casebook cases, weighted towards Juspay and Swiggy. Set your start date above to see dates.</p></div>
+  return `<div class="section-head"><h2>Your 10-day plan</h2><p>Days 1 to 3 build breadth: skim Decode and Conquer for frameworks, read the casebook theory, and watch Exponent mocks to hear good answers. Days 4 to 10 go deep on one case type a day, with an Exponent peer mock and a mentor mock most days. Practice mixes reported questions with casebook cases, weighted towards Juspay and Swiggy. Set your start date above to see dates.</p></div>
+    <section class="phase"><h3>Your resources and how the plan uses them</h3><div class="co-grid">${RES.map(r => `<div class="panel"><h3 style="font-size:16px">${esc(r.name)}</h3><p><strong>${esc(r.role)}</strong> ${esc(r.how)}</p></div>`).join("")}</div></section>
     <section class="phase"><h3>Phase 1 · Breadth on your own (Days 1 to 3)</h3>${DAYS.filter(d => d.phase === 1).map(card).join("")}</section>
     <section class="phase"><h3>Phase 2 · Seven days with experienced PMs (Days 4 to 10)</h3>${DAYS.filter(d => d.phase === 2).map(card).join("")}</section>
     <section class="phase"><h3>After day 10</h3><div class="tip">Two cases a day: one from the Casebooks tab filtered to "Not attempted", one from Real questions filtered to your target company. Redo anything rated 1 or 2 stars within 3 days.</div></section>`;
