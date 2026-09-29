@@ -2293,12 +2293,16 @@ function doExport(){
   var d = new Date(), name = 'productprep-progress-' + dateKey(d) + '-' + pad(d.getHours()) + pad(d.getMinutes()) + '.json', text = exportText();
   var p = null; try { p = window.claude && window.claude.use ? window.claude.use('downloads') : null; } catch (e) {}
   function fallback(){ copyExport(); }
-  if (!p) { fallback(); return; }
+  if (!p) { fileDownload(name, text) ? (S.profile.lastExport = d.toISOString(), save(), toast('Progress exported', name, '', ic('down')), currentRoute() === 'data' && renderData()) : fallback(); return; }
   p.then(function(dl){
     if (!dl) { fallback(); return; }
     dl.save({filename:name, data:text}).then(function(){ S.profile.lastExport = d.toISOString(); save(); toast('Progress exported', name, '', ic('down')); if (currentRoute() === 'data') renderData(); },
       function(e){ if (e && e.code === 'declined') toast('Export cancelled'); else fallback(); });
   }, fallback);
+}
+function fileDownload(name, text){
+  try { var u = URL.createObjectURL(new Blob([text], {type:'application/json'})), a = document.createElement('a');
+    a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(u); }, 1000); return true; } catch (e) { return false; }
 }
 function copyExport(){
   var text = exportText(), msg = $('#exportmsg');
