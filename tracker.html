@@ -1417,7 +1417,7 @@ function isMockTask(t){ return /mock/i.test(t.t) || t.k === 'loop'; }
 function taskKind(block, t){ return isMockTask(t) ? 'mock' : block; }
 
 /* ------------------------------------------------------------ state */
-var storageOK = true, lastSaved = null, cloud = {ref:null, status:'local', writing:false, dirty:false, at:null};
+var storageOK = true, lastSaved = null, cloud = {ref:null, status:'local', writing:false, dirty:false, at:null, ready:false};
 function blank(){
   return {schema:1, createdAt:new Date().toISOString(), updatedAt:null,
     profile:{xp:0, name:'', theme:'auto', timerQ:180, timerC:1500, autoTimer:false, reduceMotion:false, planStart:'', planDay:1, cleared:{}},
@@ -1442,7 +1442,7 @@ function save(){
 }
 function cloudSave(){
   if (!cloud.ref) return;
-  if (cloud.writing) { cloud.dirty = true; return; }
+  if (!cloud.ready || cloud.writing) { cloud.dirty = true; return; }
   cloud.writing = true; cloud.dirty = false;
   cloud.ref.set(JSON.parse(JSON.stringify(S))).then(function(){ cloud.status = 'ok'; cloud.at = new Date(); }, function(e){ cloud.status = e && e.code === 'invalid_argument' ? 'readonly' : 'err'; })
     .then(function(){ cloud.writing = false; renderSaveStatus(); if (cloud.dirty) cloudSave(); });
@@ -1459,18 +1459,20 @@ function cloudSave(){
       if (snap.exists) {
         var r = normalize(JSON.parse(JSON.stringify(snap.data())));
         var newer = (r.updatedAt || '') > (S.updatedAt || '');
-        if (first && !snap.metadata.fromCache) { first = false; if (!newer) { cloudSave(); return; } }
+        if (first && !snap.metadata.fromCache) { first = false; cloud.ready = true; if (!newer && hasProgress(S)) { cloudSave(); return; } newer = true; cloud.dirty = false; }
+        if (!cloud.ready) return;
         if (newer) {
           var a = document.activeElement; if (a && (a.tagName === 'TEXTAREA' || a.tagName === 'INPUT')) return;
           S = r; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
           applyTheme(); route(true);
         }
         cloud.status = 'ok'; renderSaveStatus();
-      } else if (!snap.metadata.fromCache && first) { first = false; cloudSave(); }
+      } else if (!snap.metadata.fromCache && first) { first = false; cloud.ready = true; cloudSave(); }
     }, function(){ cloud.status = 'err'; renderSaveStatus(); });
   }, function(){});
 })();
 
+function hasProgress(x){ return !!(x && (x.profile.xp > 0 || Object.keys(x.tasks || {}).length || Object.keys(x.q || {}).length || Object.keys(x.rev || {}).length)); }
 function entry(id){ if (!S.q[id]) S.q[id] = {attempts:[], note:'', noteAt:null, tags:[], flagged:false}; return S.q[id]; }
 function lastGrade(id){ var e = S.q[id]; if (!e || !e.attempts.length) return null; return e.attempts[e.attempts.length-1].g; }
 function lastAt(id){ var e = S.q[id]; if (!e || !e.attempts.length) return null; return e.attempts[e.attempts.length-1].at; }
