@@ -1408,11 +1408,16 @@ Q.forEach(function(r, i){ var q = {id:r[0], set:'rq', type:r[1], co:r[2], q:r[3]
 CASES.forEach(function(c, i){ var q = {id:c.id, set:'cb', type:c.seg, co:c.asked || '', q:c.prompt, name:c.name, book:c.book, page:c.page, lvl:c.lvl, order:i}; ALLQ[q.id] = q; QLIST.push(q); });
 var SETS = {
   rq:{key:'rq', label:'Real questions', title:'Real questions', icon:'bolt', groupName:function(q){ return TYPE_NAME[q.type] || q.type; },
-      sub:'Questions candidates reported for APM and PM-1 roles, question banks that tag the company, and interview guides. Each one says where it came from.'},
+      sub:'Questions candidates reported for APM and PM-1 roles, question banks that tag the company, and interview guides. They have no worked solutions, so they are optional practice: not graded, no XP, and not part of your daily targets. Tick Practised if you want to keep track.'},
   cb:{key:'cb', label:'Casebook', title:'Casebook cases', icon:'case', groupName:function(q){ return SEGS[q.type] || q.type; },
       sub:'Every practice case in the IIMA Product Mindset and IIMB Sigma casebooks. Answer out loud, then open the worked solution in the PDF and grade yourself.'}
 };
 function setQs(set){ return QLIST.filter(function(q){ return q.set === set; }); }
+// Only casebook cases are graded. Real questions have no worked solution, so they are optional practice.
+var CASEQ = setQs('cb');
+function isCase(id){ var q = ALLQ[id]; return !!(q && q.set === 'cb'); }
+function isPractised(id){ var e = S.q[id]; return !!(e && e.practised); }
+function isDone(q){ return q.set === 'cb' ? !!lastGrade(q.id) : isPractised(q.id); }
 function isMockTask(t){ return /mock/i.test(t.t) || t.k === 'loop'; }
 function taskKind(block, t){ return isMockTask(t) ? 'mock' : block; }
 
@@ -1474,10 +1479,10 @@ function cloudSave(){
 
 function hasProgress(x){ return !!(x && (x.profile.xp > 0 || Object.keys(x.tasks || {}).length || Object.keys(x.q || {}).length || Object.keys(x.rev || {}).length)); }
 function entry(id){ if (!S.q[id]) S.q[id] = {attempts:[], note:'', noteAt:null, tags:[], flagged:false}; return S.q[id]; }
-function lastGrade(id){ var e = S.q[id]; if (!e || !e.attempts.length) return null; return e.attempts[e.attempts.length-1].g; }
-function lastAt(id){ var e = S.q[id]; if (!e || !e.attempts.length) return null; return e.attempts[e.attempts.length-1].at; }
+function lastGrade(id){ var e = S.q[id]; if (!isCase(id) || !e || !e.attempts.length) return null; return e.attempts[e.attempts.length-1].g; }
+function lastAt(id){ var e = S.q[id]; if (!isCase(id)) return e && e.practised || null; if (!e || !e.attempts.length) return null; return e.attempts[e.attempts.length-1].at; }
 function dueDate(id){
-  var e = S.q[id]; if (!e || !e.attempts.length) return null;
+  var e = S.q[id]; if (!isCase(id) || !e || !e.attempts.length) return null;
   var a = e.attempts, last = a[a.length-1], days;
   if (last.g === 'X') days = 3; else if (last.g === 'M') days = 1; else if (last.g === 'P') days = 2; else if (last.g === 'U') days = 4;
   else { var k = 0; for (var i = a.length-1; i >= 0 && a[i].g === 'N'; i--) k++; days = Math.min(60, 7 * Math.pow(2, k-1)); }
@@ -1518,30 +1523,30 @@ function setStats(qs){
   var base = qs.length - c.X;
   return {total:qs.length, answered:ans, scored:sc, counts:c, avg:sc ? sum/sc : 0, readiness:base > 0 ? sum/base : 0, flagged:flagged, due:due, noted:noted};
 }
-function totalAttempts(){ var n = 0; for (var id in S.q) n += S.q[id].attempts.length; return n; }
+function totalAttempts(){ var n = 0; for (var id in S.q) if (isCase(id)) n += S.q[id].attempts.length; return n; }
 function streak(){ var d = new Date(), n = 0; if (!(S.activity[dateKey(d)] > 0)) d = addDays(d, -1); while (S.activity[dateKey(d)] > 0) { n++; d = addDays(d, -1); } return n; }
 function levelInfo(xp){ var i = 0; for (var k = 0; k < LEVELS.length; k++) if (xp >= LEVELS[k].xp) i = k; var cur = LEVELS[i], nxt = LEVELS[i+1]; return {i:i, name:cur.n, floor:cur.xp, next:nxt ? nxt.xp : null, nextName:nxt ? nxt.n : null, pct:nxt ? (xp - cur.xp) / (nxt.xp - cur.xp) : 1}; }
-function typeScore(type, min){ var st = setStats(QLIST.filter(function(q){ return q.type === type || (type === 'design' && q.type === 'improve'); })); return st.answered >= min ? st.avg : -1; }
+function typeScore(type, min){ var st = setStats(CASEQ.filter(function(q){ return q.type === type || (type === 'design' && q.type === 'improve'); })); return st.answered >= min ? st.avg : -1; }
 function bump(){ var tk = todayKey(); S.activity[tk] = (S.activity[tk] || 0) + 1; }
 
 /* ------------------------------------------------------------ badges */
 var BADGES = [
-  {id:'first', n:'First case', d:'Grade your first question or case', t:function(){ return totalAttempts() >= 1; }},
-  {id:'ten', n:'Case day', d:'Grade 10 in one day', t:function(){ var m = attemptsByDay(); for (var k in m) if (m[k] >= 10) return true; return false; }},
-  {id:'fifty', n:'Fifty reps', d:'Grade 50 questions and cases', t:function(){ return totalAttempts() >= 50; }},
+  {id:'first', n:'First case', d:'Grade your first casebook case', t:function(){ return totalAttempts() >= 1; }},
+  {id:'ten', n:'Case day', d:'Grade 10 cases in one day', t:function(){ var m = attemptsByDay(); for (var k in m) if (m[k] >= 10) return true; return false; }},
+  {id:'fifty', n:'Fifty reps', d:'Grade 50 casebook cases', t:function(){ return totalAttempts() >= 50; }},
   {id:'streak5', n:'Five-day streak', d:'Practise 5 days in a row', t:function(){ return streak() >= 5; }},
-  {id:'comeback', n:'Comeback', d:'Make interview-ready something you had lost', t:function(){ for (var id in S.q){ var a = S.q[id].attempts; for (var i = 1; i < a.length; i++) if (a[i].g === 'N' && (a[i-1].g === 'M' || a[i-1].g === 'P')) return true; } return false; }},
+  {id:'comeback', n:'Comeback', d:'Make interview-ready something you had lost', t:function(){ for (var id in S.q){ if (!isCase(id)) continue; var a = S.q[id].attempts; for (var i = 1; i < a.length; i++) if (a[i].g === 'N' && (a[i-1].g === 'M' || a[i-1].g === 'P')) return true; } return false; }},
   {id:'honest', n:'Honest mirror', d:'Write notes on 10 misses', t:function(){ var n = 0; for (var id in S.q){ var g = lastGrade(id); if (S.q[id].note && g && g !== 'N') n++; } return n >= 10; }},
-  {id:'rca', n:'Root finder', d:'80%+ on 8 or more RCA items', t:function(){ return typeScore('rca', 8) >= 0.8; }},
-  {id:'design', n:'User whisperer', d:'80%+ on 8 or more design or improvement items', t:function(){ return typeScore('design', 8) >= 0.8; }},
+  {id:'rca', n:'Root finder', d:'80%+ on 8 or more RCA cases', t:function(){ return typeScore('rca', 8) >= 0.8; }},
+  {id:'design', n:'User whisperer', d:'80%+ on 8 or more design or improvement cases', t:function(){ return typeScore('design', 8) >= 0.8; }},
   {id:'guess', n:'Back of the envelope', d:'80%+ on 6 or more guesstimates', t:function(){ return typeScore('guess', 6) >= 0.8; }},
-  {id:'juspay', n:'Payments ready', d:'Attempt every reported Juspay question', t:function(){ return QLIST.filter(function(q){ return q.co === 'Juspay' && q.badge !== 'P'; }).every(function(q){ return lastGrade(q.id); }); }},
-  {id:'swiggy', n:'Marketplace ready', d:'Attempt every Swiggy question', t:function(){ return QLIST.filter(function(q){ return q.co === 'Swiggy'; }).every(function(q){ return lastGrade(q.id); }); }},
+  {id:'juspay', n:'Payments ready', d:'Practise every reported Juspay question', t:function(){ return QLIST.filter(function(q){ return q.co === 'Juspay' && q.badge !== 'P'; }).every(isDone); }},
+  {id:'swiggy', n:'Marketplace ready', d:'Practise every Swiggy question and grade every Swiggy case', t:function(){ return QLIST.filter(function(q){ return q.co === 'Swiggy'; }).every(isDone); }},
   {id:'primers', n:'Sector scholar', d:'Read all 10 daily industry primers', t:function(){ return DAYS.every(function(d){ return S.tasks[d.id + '-primer']; }); }},
   {id:'mocks', n:'Mock regular', d:'Log 5 mock interviews', t:function(){ var n = 0; DAYS.forEach(function(d){ allTasks(d).forEach(function(t){ if (isMockTask(t) && S.tasks[d.id + '-' + t.k]) n++; }); }); return n >= 5; }},
-  {id:'night', n:'Night shift', d:'Grade something between midnight and 5 am', t:function(){ for (var id in S.q){ var a = S.q[id].attempts; for (var i = 0; i < a.length; i++) if (new Date(a[i].at).getHours() < 5) return true; } return false; }}
+  {id:'night', n:'Night shift', d:'Grade something between midnight and 5 am', t:function(){ for (var id in S.q){ if (!isCase(id)) continue; var a = S.q[id].attempts; for (var i = 0; i < a.length; i++) if (new Date(a[i].at).getHours() < 5) return true; } return false; }}
 ];
-function attemptsByDay(){ var m = {}; for (var id in S.q) S.q[id].attempts.forEach(function(a){ var k = dateKey(new Date(a.at)); m[k] = (m[k] || 0) + 1; }); return m; }
+function attemptsByDay(){ var m = {}; for (var id in S.q) if (isCase(id)) S.q[id].attempts.forEach(function(a){ var k = dateKey(new Date(a.at)); m[k] = (m[k] || 0) + 1; }); return m; }
 function checkBadges(){
   var got = [];
   BADGES.forEach(function(b){ if (!S.badges[b.id] && b.t()) { S.badges[b.id] = new Date().toISOString(); got.push(b); } });
@@ -1569,10 +1574,11 @@ function checkDayCleared(xpArr, why){
 /* ------------------------------------------------------------ grading */
 function thinkSecs(id){ var t = session.shownAt[id]; if (!t) return null; var s = Math.round((Date.now() - t) / 1000); return s > 0 && s < 7200 ? s : null; }
 function grade(id, g){
+  if (!isCase(id)) return;
   var q = ALLQ[id], e = entry(id), prev = lastGrade(id);
   e.attempts.push({at:new Date().toISOString(), g:g, secs:session.revealSecs[id] != null ? session.revealSecs[id] : null});
   bump();
-  var mult = q.set === 'cb' ? CASE_MULT : 1, xp = [GRADES[g].xp * mult], why = [GRADES[g].label + (q.set === 'cb' ? ' (case)' : '')];
+  var mult = q.set === 'cb' && g !== 'X' ? CASE_MULT : 1, xp = [GRADES[g].xp * mult], why = [GRADES[g].label + (q.set === 'cb' ? ' (case)' : '')];
   if (prev && (prev === 'M' || prev === 'P') && g === 'N') { xp[0] += 5; why.push('Comeback'); }
   if (g === 'N') { session.combo++; if (session.combo >= 3) showCombo(session.combo); if (session.combo % 5 === 0) { xp[0] += 5; why.push('Combo x' + session.combo); } }
   else if (g !== 'X') session.combo = 0;
@@ -1580,6 +1586,7 @@ function grade(id, g){
   awardXP(xp[0], why);
   save(); checkBadges(); refreshCard(id); refreshChrome();
 }
+function togglePractised(id){ var e = entry(id); if (e.practised) delete e.practised; else { e.practised = new Date().toISOString(); bump(); } save(); checkBadges(); refreshCard(id); refreshChrome(); }
 function toggleFlag(id){ var e = entry(id); e.flagged = !e.flagged; save(); refreshCard(id); }
 function toggleTag(id, tag){ var e = entry(id); e.tags = e.tags || []; var i = e.tags.indexOf(tag); if (i >= 0) e.tags.splice(i, 1); else e.tags.push(tag); save(); }
 var noteSave = debounce(function(id, val){
@@ -1631,12 +1638,13 @@ var NAV = [
   {k:'data', t:'Export and settings', i:'data'}
 ];
 function renderNav(){
-  var cur = currentRoute(), dueN = QLIST.filter(function(q){ return isDue(q.id); }).length;
+  var cur = currentRoute(), dueN = CASEQ.filter(function(q){ return isDue(q.id); }).length;
   var html = NAV.map(function(n){
     if (n.sep) return '<div class="nav-sep"></div>';
     var extra = '';
-    if (n.k === 'rq' || n.k === 'cb') { var st = setStats(setQs(n.k)); extra = '<span class="cnt">' + st.answered + '/' + st.total + '</span>'; }
-    if (n.k === 'co') { var cq = coItems('Juspay').concat(coItems('Swiggy')), cs = setStats(cq); extra = '<span class="cnt">' + cs.answered + '/' + cs.total + '</span>'; }
+    if (n.k === 'cb') { var st = setStats(CASEQ); extra = '<span class="cnt">' + st.answered + '/' + st.total + '</span>'; }
+    if (n.k === 'rq') { var rqs = setQs('rq'); extra = '<span class="cnt">' + rqs.filter(isDone).length + '/' + rqs.length + '</span>'; }
+    if (n.k === 'co') { var cq = coItems('Juspay').concat(coItems('Swiggy')); extra = '<span class="cnt">' + cq.filter(isDone).length + '/' + cq.length + '</span>'; }
     if (n.k === 'review' && dueN) extra = '<span class="due">' + dueN + '</span>';
     if (n.k === 'mistakes') { var mk = mistakeItems(); if (mk.length) extra = '<span class="cnt">' + mk.length + '</span>'; }
     if (n.k === 'plan') { var pd = planToday(); if (pd) extra = '<span class="cnt">' + pd.done + '/' + pd.total + '</span>'; }
@@ -1728,6 +1736,7 @@ function go(r){ if (location.hash === '#' + r) route(); else location.hash = r; 
 /* ------------------------------------------------------------ quiz engine */
 function filtered(set){
   var st = ui(set), term = (st.search || '').trim().toLowerCase(), pmap = null;
+  if (set === 'rq') { if (['all', 'none', 'done'].indexOf(st.status) < 0) st.status = 'all'; if (['default', 'shuffle', 'recent'].indexOf(st.sort) < 0) st.sort = 'default'; }
   if (st.plan && st.plan.ids && st.plan.ids.length) { pmap = {}; st.plan.ids.forEach(function(id){ pmap[id] = 1; }); }
   var out = setQs(set).filter(function(q){
     if (pmap && !pmap[q.id]) return false;
@@ -1737,6 +1746,7 @@ function filtered(set){
     if (set === 'cb' && st.book !== 'all' && q.book !== st.book) return false;
     if (set === 'cb' && st.lvl !== 'all' && q.lvl !== st.lvl) return false;
     var g = lastGrade(q.id), e = S.q[q.id];
+    if (set === 'rq') { if (st.status === 'none' && isPractised(q.id)) return false; if (st.status === 'done' && !isPractised(q.id)) return false; }
     if (st.status === 'none' && g) return false;
     if (GRADES[st.status] && g !== st.status) return false;
     if (st.status === 'due' && !isDue(q.id)) return false;
@@ -1772,6 +1782,13 @@ function renderQuiz(set){
   if (ui(set).mode === 'focus') scrollToResults();
 }
 function statsPanel(set){
+  if (set === 'rq') {
+    var qs = setQs('rq'), pr = qs.filter(isDone).length, fl = qs.filter(function(q){ var e = S.q[q.id]; return e && e.flagged; }).length, nt = qs.filter(function(q){ var e = S.q[q.id]; return e && e.note; }).length;
+    var rrows = groupsOf('rq').map(function(gp){ var d = gp.qs.filter(isDone).length;
+      return '<button class="brow" data-act="gfilter" data-set="rq" data-val="' + esc(gp.name) + '" title="Show only ' + esc(gp.name) + '"><span class="bl">' + esc(gp.name) + '</span><span class="meter"><span style="width:' + (d / gp.qs.length * 100).toFixed(1) + '%"></span></span><span class="bn">' + d + '/' + gp.qs.length + '</span><span class="bs"></span></button>'; }).join('');
+    return '<div class="tiles">' + tile('Practised', pr + ' <span class="muted" style="font-size:16px;font-weight:500">/ ' + qs.length + '</span>', 'Optional. Not graded and not in your daily targets') + tile('Flagged', fl, 'Marked to come back to') + tile('With notes', nt, 'Your own notes') + '</div>' +
+      '<h2 style="margin-top:20px">Practised by question type</h2><div class="brows">' + rrows + '</div>';
+  }
   var st = setStats(setQs(set));
   var tiles = '<div class="tiles">' +
     tile('Answered', st.answered + ' <span class="muted" style="font-size:16px;font-weight:500">/ ' + st.total + '</span>', st.total ? pct(st.answered / st.total) + ' covered' : '') +
@@ -1792,7 +1809,7 @@ function filtersHtml(set){
   return '<div class="frow">' +
     '<div class="search">' + ic('search') + '<input class="input" type="search" placeholder="Search ' + (set === 'rq' ? 'questions' : 'cases') + '" data-f="search" data-set="' + set + '" value="' + esc(st.search) + '" aria-label="Search"></div>' +
     '<select class="select" data-f="group" data-set="' + set + '" aria-label="Type">' + opt('all', 'All types', st.group) + groups.map(function(g){ return opt(g, g, st.group); }).join('') + '</select>' +
-    '<select class="select" data-f="status" data-set="' + set + '" aria-label="Status">' + opt('all', 'Any status', st.status) + opt('none', 'Not tried', st.status) + GORDER.map(function(g){ return opt(g, GRADES[g].label, st.status); }).join('') + opt('due', 'Due for review', st.status) + '</select>' +
+    '<select class="select" data-f="status" data-set="' + set + '" aria-label="Status">' + (set === 'rq' ? opt('all', 'Any status', st.status) + opt('none', 'Not practised', st.status) + opt('done', 'Practised', st.status) : opt('all', 'Any status', st.status) + opt('none', 'Not tried', st.status) + GORDER.map(function(g){ return opt(g, GRADES[g].label, st.status); }).join('') + opt('due', 'Due for review', st.status)) + '</select>' +
     (set === 'rq'
       ? '<select class="select" data-f="co" data-set="rq" aria-label="Company">' + opt('all', 'All companies', st.co) + cos.map(function(c){ return opt(c, c === 'Various' ? 'Multiple / general' : c, st.co); }).join('') + '</select>' +
         '<select class="select" data-f="badge" data-set="rq" aria-label="Source type">' + opt('all', 'Any source', st.badge) + opt('R', 'Reported only', st.badge) + opt('G', 'Guides', st.badge) + opt('P', 'Practice', st.badge) + '</select>'
@@ -1800,7 +1817,7 @@ function filtersHtml(set){
         '<select class="select" data-f="lvl" data-set="cb" aria-label="Difficulty">' + opt('all', 'Any difficulty', st.lvl) + ['Easy','Med','Hard'].map(function(d){ return opt(d, d === 'Med' ? 'Medium' : d, st.lvl); }).join('') + '</select>') +
   '</div><div class="frow">' + tog('flagged', 'Flagged') + tog('noted', 'Has a note') +
     '<select class="select" data-f="sort" data-set="' + set + '" aria-label="Sort">' +
-      [['default', set === 'rq' ? 'Default order' : 'Book order'], ['shuffle', 'Shuffle'], ['weakest', 'Weakest first'], ['due', 'Due soonest'], ['recent', 'Recently attempted']].concat(set === 'cb' ? [['diff', 'Easiest first']] : []).map(function(o){ return opt(o[0], 'Sort: ' + o[1], st.sort); }).join('') + '</select>' +
+      (set === 'rq' ? [['default', 'Default order'], ['shuffle', 'Shuffle'], ['recent', 'Recently practised']] : [['default', 'Book order'], ['shuffle', 'Shuffle'], ['weakest', 'Weakest first'], ['due', 'Due soonest'], ['recent', 'Recently attempted'], ['diff', 'Easiest first']]).map(function(o){ return opt(o[0], 'Sort: ' + o[1], st.sort); }).join('') + '</select>' +
     (st.sort === 'shuffle' ? '<button class="btn sm ghost" data-act="reshuffle" data-set="' + set + '">' + ic('shuffle') + 'Reshuffle</button>' : '') +
     '<div class="seg-ctl" role="group" aria-label="View"><button data-act="mode" data-set="' + set + '" data-v="list" aria-pressed="' + (st.mode === 'list') + '">' + ic('list') + 'List</button><button data-act="mode" data-set="' + set + '" data-v="focus" aria-pressed="' + (st.mode === 'focus') + '">' + ic('focus') + 'Focus</button></div>' +
     '<span class="rinfo"><span id="rcount"></span><button class="linkish" data-act="reset" data-set="' + set + '">Reset filters</button></span></div>';
@@ -1826,7 +1843,7 @@ function focusHtml(ctx, list, i){
     '<div class="fprog" role="progressbar" aria-valuemin="1" aria-valuemax="' + list.length + '" aria-valuenow="' + (i + 1) + '"><div class="fbar" style="width:' + ((i + 1) / list.length * 100).toFixed(1) + '%"></div></div>' +
     '<div class="fnav"><button class="btn ghost sm" data-act="move" data-set="' + ctx + '" data-d="-1"' + (i === 0 ? ' disabled' : '') + ' aria-label="Previous">' + ic('left') + '</button><span class="fpos">' + (i + 1) + ' / ' + list.length + '</span><button class="btn ghost sm" data-act="move" data-set="' + ctx + '" data-d="1"' + (i === list.length - 1 ? ' disabled' : '') + ' aria-label="Next">' + ic('right') + '</button></div></div>' +
     cardHtml(q, true) +
-    '<div class="kbd-hint"><span><kbd>Space</kbd> answer</span><span><kbd>1</kbd> to <kbd>4</kbd> grade</span><span><kbd>F</kbd> flag</span><span><kbd>N</kbd> note</span><span><kbd>←</kbd> <kbd>→</kbd> move</span><span><kbd>T</kbd> timer</span></div>';
+    '<div class="kbd-hint"><span><kbd>Space</kbd> answer</span>' + (q.set === 'cb' ? '<span><kbd>1</kbd> to <kbd>4</kbd> grade</span>' : '') + '<span><kbd>F</kbd> flag</span><span><kbd>N</kbd> note</span><span><kbd>←</kbd> <kbd>→</kbd> move</span><span><kbd>T</kbd> timer</span></div>';
 }
 function cardHtml(q, focus){
   var rev = !!session.revealed[q.id];
@@ -1842,7 +1859,7 @@ function metaInner(q){
     (b ? '<span class="chip ' + (q.badge === 'R' ? 'ts' : q.badge === 'G' ? 'upd' : '') + '" data-tip="' + esc(b[2]) + '">' + b[0] + '</span>' : '') +
     (q.lvl ? '<span class="chip">' + esc(q.lvl === 'Med' ? 'Medium' : q.lvl) + '</span>' : '') +
     (q.set === 'cb' && q.co ? '<span class="chip ind">Asked at ' + esc(q.co) + '</span>' : '') +
-    (g ? statusChip(g, e.attempts.length) : '<span class="chip new">Not tried</span>') +
+    (q.set === 'rq' ? (isPractised(q.id) ? '<span class="stchip g-N"><span class="gicon">' + GI.N + '</span>Practised</span>' : '<span class="chip new">Optional</span>') : g ? statusChip(g, e.attempts.length) : '<span class="chip new">Not tried</span>') +
     '<span class="grow"></span>' +
     (q.set === 'cb' ? '<a class="chip" href="' + pdfHref(q.book, q.page) + '" target="_blank" rel="noopener" data-tip="Open the casebook at this case in a new tab">' + BOOKS[q.book].short + ' p. ' + q.page + ' ' + ic('ext') + '</a>' : '') +
     '<button class="icon-btn flag' + (e && e.flagged ? ' on' : '') + '" data-act="flag" data-id="' + q.id + '" aria-pressed="' + !!(e && e.flagged) + '" aria-label="Flag for revision" data-tip="Flag for revision (F)">' + ic('flag') + '</button>';
@@ -1892,7 +1909,12 @@ function answerHtml(q){
   }
   return '<div class="ans-grid"><div class="prose">' + body + '</div><aside>' + side + '</aside></div>';
 }
-function answerBlock(q){ return answerHtml(q) + '<div class="gradebox"><div class="mini-label">How did you do?</div>' + gradeRow(q) + '<div id="reflect-' + q.id + '">' + reflectInner(q) + '</div></div>'; }
+function practBtn(q){ var e = S.q[q.id], on = isPractised(q.id);
+  return '<button class="gbtn g-N' + (on ? ' on' : '') + '" id="pr-' + q.id + '" data-act="practised" data-id="' + q.id + '" aria-pressed="' + on + '"><span class="gicon">' + GI.N + '</span>' + (on ? 'Practised ' + fmtDate(e.practised) : 'Mark as practised') + '</button>'; }
+function noteBox(q, ph){ var e = S.q[q.id] || {}; return '<label class="note"><span class="mini-label">Note to self</span><textarea data-act="note" data-id="' + q.id + '" maxlength="400" rows="2" placeholder="' + esc(ph) + '">' + esc(e.note || '') + '</textarea><span class="count">' + (e.note || '').length + '/400</span></label>'; }
+function answerBlock(q){
+  if (q.set === 'rq') return answerHtml(q) + '<div class="gradebox"><div class="mini-label">Optional practice. Not graded, no XP, not in your daily targets</div><div class="grade-row">' + practBtn(q) + '</div><div class="reflect" id="reflect-' + q.id + '">' + noteBox(q, 'Optional: what you would say differently, or mentor feedback') + '</div></div>';
+  return answerHtml(q) + '<div class="gradebox"><div class="mini-label">How did you do?</div>' + gradeRow(q) + '<div id="reflect-' + q.id + '">' + reflectInner(q) + '</div></div>'; }
 function gradeRow(q){
   var g = lastGrade(q.id), mult = q.set === 'cb' ? CASE_MULT : 1;
   return '<div class="grade-row" id="grade-' + q.id + '" role="group" aria-label="Grade your answer">' + GBTN.map(function(k){
@@ -1903,7 +1925,7 @@ function reflectInner(q){
   var e = S.q[q.id] || {}, g = lastGrade(q.id);
   if (!g) return '<p class="hint">Grading logs the attempt, sets the next review date and earns XP. Cases earn double. You can re-grade later; every attempt is kept.</p>';
   var tags = g !== 'N' ? '<div class="tags"><span class="mini-label">What went wrong</span>' + MISS_TAGS.map(function(t){ var on = (e.tags || []).indexOf(t) >= 0; return '<button class="tag' + (on ? ' on' : '') + '" data-act="tag" data-id="' + q.id + '" data-tag="' + esc(t) + '" aria-pressed="' + on + '">' + esc(t) + '</button>'; }).join('') + '</div>' : '';
-  var note = '<label class="note"><span class="mini-label">Note to self</span><textarea data-act="note" data-id="' + q.id + '" maxlength="400" rows="2" placeholder="' + (g === 'N' ? 'Optional: anything worth remembering' : 'What did you miss? Mentor feedback goes here too') + '">' + esc(e.note || '') + '</textarea><span class="count">' + (e.note || '').length + '/400</span></label>';
+  var note = noteBox(q, g === 'N' ? 'Optional: anything worth remembering' : 'What did you miss? Mentor feedback goes here too');
   var due = dueDate(q.id), a = e.attempts || [];
   var line = '<div class="attempt-line">' + a.length + ' attempt' + (a.length > 1 ? 's' : '') + ': ' + a.slice(-6).map(function(x){ return GRADES[x.g].short; }).join(', ') + '. Comes back for review on ' + fmtDate(due) + '.</div>';
   return '<div class="reflect">' + tags + note + line + '</div>';
@@ -1911,7 +1933,8 @@ function reflectInner(q){
 function refreshCard(id){
   var q = ALLQ[id]; if (!q) return;
   var m = $('#meta-' + id); if (m) m.innerHTML = metaInner(q);
-  if (session.revealed[id]) { var gr = $('#grade-' + id); if (gr) gr.outerHTML = gradeRow(q); var rf = $('#reflect-' + id); if (rf) rf.innerHTML = reflectInner(q); }
+  if (session.revealed[id] && q.set === 'rq') { var pb = $('#pr-' + id); if (pb) pb.outerHTML = practBtn(q); }
+  else if (session.revealed[id]) { var gr = $('#grade-' + id); if (gr) gr.outerHTML = gradeRow(q); var rf = $('#reflect-' + id); if (rf) rf.innerHTML = reflectInner(q); }
   var r = currentRoute();
   if ((r === 'rq' || r === 'cb') && $('#qstats')) { $('#qstats').innerHTML = statsPanel(r); var c = $('#rcount'); if (c) c.textContent = filtered(r).length + ' of ' + setQs(r).length + ' shown'; var pc = $('#planchip'); if (pc) pc.outerHTML = planChip(r); }
 }
@@ -1948,7 +1971,7 @@ function openQuestion(id){
 /* ------------------------------------------------------------ review */
 function reviewList(){
   var ahead = ui('rv').ahead, lim = dateKey(addDays(new Date(), 7));
-  return QLIST.filter(function(q){ if (isDue(q.id)) return true; if (!ahead) return false; var d = dueDate(q.id); return d && dateKey(d) <= lim; })
+  return CASEQ.filter(function(q){ if (isDue(q.id)) return true; if (!ahead) return false; var d = dueDate(q.id); return d && dateKey(d) <= lim; })
     .sort(function(a, b){ return (dueDate(a.id) - dueDate(b.id)) || (a.order - b.order); });
 }
 function renderReview(){
@@ -1967,25 +1990,25 @@ function renderReviewResults(){
 }
 function upcomingHtml(){
   var lim = dateKey(addDays(new Date(), 7));
-  var up = QLIST.map(function(q){ return {q:q, d:dueDate(q.id)}; }).filter(function(x){ return x.d && !isDue(x.q.id) && dateKey(x.d) <= lim; }).sort(function(a, b){ return a.d - b.d; });
+  var up = CASEQ.map(function(q){ return {q:q, d:dueDate(q.id)}; }).filter(function(x){ return x.d && !isDue(x.q.id) && dateKey(x.d) <= lim; }).sort(function(a, b){ return a.d - b.d; });
   if (!up.length) return '<p class="hint" style="margin:0">Nothing scheduled yet.</p>';
   return up.map(function(x){ return '<div class="upc"><span class="d">' + fmtDate(x.d) + '</span><span class="qq" title="' + esc(x.q.q) + '">' + esc(x.q.name || x.q.q) + '</span>' + statusChip(lastGrade(x.q.id), 1) + '</div>'; }).join('');
 }
 
 /* ------------------------------------------------------------ mistakes */
-function mistakeItems(){ return QLIST.filter(function(q){ var g = lastGrade(q.id); return g && g !== 'N' && g !== 'X'; }); }
+function mistakeItems(){ return CASEQ.filter(function(q){ var g = lastGrade(q.id); return g && g !== 'N' && g !== 'X'; }); }
 function renderMistakes(){
   var st = ui('mk');
   function chip(k, v, label){ return '<button class="tog" data-act="mk-f" data-k="' + k + '" data-v="' + v + '" aria-pressed="' + (st[k] === v) + '">' + label + '</button>'; }
-  $('#view').innerHTML = '<div class="page-head"><div><h1>Mistakes sheet</h1><p class="sub">Everything you graded below interview-ready, grouped by type, with what went wrong and your notes. Read it the night before an interview.</p></div></div>' +
-    '<div class="frow" style="margin-bottom:6px">' + chip('set', 'all', 'Everything') + chip('set', 'rq', 'Real questions') + chip('set', 'cb', 'Casebook') + '<span style="width:12px"></span>' + chip('only', 'all', 'All grades') + chip('only', 'M', 'Lost structure') + chip('only', 'P', 'Shaky') + chip('only', 'U', 'Solid, missed a bit') +
+  $('#view').innerHTML = '<div class="page-head"><div><h1>Mistakes sheet</h1><p class="sub">Every casebook case you graded below interview-ready, grouped by type, with what went wrong and your notes. Read it the night before an interview.</p></div></div>' +
+    '<div class="frow" style="margin-bottom:6px">' + chip('only', 'all', 'All grades') + chip('only', 'M', 'Lost structure') + chip('only', 'P', 'Shaky') + chip('only', 'U', 'Solid, missed a bit') +
     '<div class="search" style="margin-left:auto">' + ic('search') + '<input class="input" type="search" placeholder="Search your mistakes" data-f="mk-search" value="' + esc(st.q) + '" aria-label="Search mistakes"></div></div><div id="mkbody"></div>';
   renderMistakeBody();
 }
 function renderMistakeBody(){
   var st = ui('mk'), term = (st.q || '').toLowerCase();
   var items = mistakeItems().filter(function(q){ var g = lastGrade(q.id), e = S.q[q.id];
-    if (st.set !== 'all' && q.set !== st.set) return false; if (st.only !== 'all' && g !== st.only) return false;
+    if (st.only !== 'all' && g !== st.only) return false;
     if (term && ((q.name || '') + ' ' + q.q + ' ' + (e.note || '') + ' ' + (e.tags || []).join(' ')).toLowerCase().indexOf(term) < 0) return false; return true; });
   var box = $('#mkbody'); if (!box) return;
   if (!items.length) { box.innerHTML = '<div class="panel empty">Nothing here yet. Anything you grade lost, shaky or solid shows up with your notes.</div>'; return; }
@@ -2010,7 +2033,7 @@ function planInfo(){
 function allTasks(d){ return [].concat(d.habits.map(function(t){ return {t:t, b:'habit'}; }), d.learn.map(function(t){ return {t:t, b:'learn'}; }), d.output.map(function(t){ return {t:t, b:'produce'}; })).map(function(x){ x.t.block = x.b; return x.t; }); }
 function dayPractice(d){ return d.practice.map(function(p){ return ALLQ[p.indexOf('cb:') === 0 ? p.slice(3) : p]; }).filter(Boolean); }
 function dayStats(d){
-  var qs = dayPractice(d), ts = allTasks(d), qd = qs.filter(function(q){ return lastGrade(q.id); }).length, td = ts.filter(function(t){ return S.tasks[d.id + '-' + t.k]; }).length;
+  var qs = dayPractice(d).filter(function(q){ return q.set === 'cb'; }), ts = allTasks(d), qd = qs.filter(function(q){ return lastGrade(q.id); }).length, td = ts.filter(function(t){ return S.tasks[d.id + '-' + t.k]; }).length;
   return {q:qs.length, qd:qd, t:ts.length, td:td, total:qs.length + ts.length, done:qd + td};
 }
 function planToday(){ var P = planInfo(), d = DAYS[P.cur - 1]; if (!d) return null; var s = dayStats(d); return {day:d, cur:P.cur, n:P.n, done:s.done, total:s.total}; }
@@ -2032,11 +2055,11 @@ function practiceBlock(d, open){
   var rq = qs.filter(function(q){ return q.set === 'rq'; }), cb = qs.filter(function(q){ return q.set === 'cb'; });
   function row(set, list){
     if (!list.length) return '';
-    var done = list.filter(function(q){ return lastGrade(q.id); }).length, p0 = Math.round(done / list.length * 100);
-    return '<div class="pblock"><div class="pb-main"><div class="pb-t">' + ic(SETS[set].icon) + '<b>' + (set === 'rq' ? 'Real questions' : 'Casebook cases') + ', ' + list.length + '</b><span class="muted">' + esc(uniq(list.map(function(q){ return SETS[set].groupName(q); })).join(', ')) + '</span></div>' +
-      '<div class="pb-bar"><span style="width:' + p0 + '%"></span></div><div class="pb-sub">' + done + ' of ' + list.length + ' graded' + (set === 'cb' ? ' · double XP' : '') + '</div>' +
-      '<div class="rev-chips" style="margin-top:8px">' + list.map(function(q){ var g = lastGrade(q.id); return '<button class="rev-chip" data-act="open-q" data-id="' + q.id + '"><span>' + (g ? '<span class="stchip g-' + g + '" style="padding:0 6px 0 0;border:0;background:none"><span class="gicon">' + GI[g] + '</span></span>' : '') + esc(q.name || (q.q.length > 70 ? q.q.slice(0, 67) + '...' : q.q)) + '</span><small>' + esc(q.set === 'cb' ? BOOKS[q.book].short + ' p.' + q.page : (q.co !== 'Various' ? q.co + ' · ' : '') + BADGE[q.badge][0]) + '</small></button>'; }).join('') + '</div></div>' +
-      (open ? '<div class="pb-acts"><button class="btn sm' + (done < list.length ? ' primary' : '') + '" data-act="plan-start" data-set="' + set + '" data-d="' + d.n + '">' + ic('play') + (done ? 'Continue' : 'Start') + '</button></div>' : '') + '</div>';
+    var isRq = set === 'rq', done = list.filter(isDone).length, p0 = Math.round(done / list.length * 100);
+    return '<div class="pblock"><div class="pb-main"><div class="pb-t">' + ic(SETS[set].icon) + '<b>' + (isRq ? 'Optional: real questions' : 'Casebook cases') + ', ' + list.length + '</b><span class="muted">' + esc(uniq(list.map(function(q){ return SETS[set].groupName(q); })).join(', ')) + '</span></div>' +
+      '<div class="pb-bar"><span style="width:' + p0 + '%"></span></div><div class="pb-sub">' + (isRq ? done + ' of ' + list.length + ' practised · not graded, not in today\'s target' : done + ' of ' + list.length + ' graded · double XP') + '</div>' +
+      '<div class="rev-chips" style="margin-top:8px">' + list.map(function(q){ var g = isRq ? (isPractised(q.id) ? 'N' : null) : lastGrade(q.id); return '<button class="rev-chip" data-act="open-q" data-id="' + q.id + '"><span>' + (g ? '<span class="stchip g-' + g + '" style="padding:0 6px 0 0;border:0;background:none"><span class="gicon">' + GI[g] + '</span></span>' : '') + esc(q.name || (q.q.length > 70 ? q.q.slice(0, 67) + '...' : q.q)) + '</span><small>' + esc(q.set === 'cb' ? BOOKS[q.book].short + ' p.' + q.page : (q.co !== 'Various' ? q.co + ' · ' : '') + BADGE[q.badge][0]) + '</small></button>'; }).join('') + '</div></div>' +
+      (open ? '<div class="pb-acts"><button class="btn sm' + (done < list.length && !isRq ? ' primary' : '') + '" data-act="plan-start" data-set="' + set + '" data-d="' + d.n + '">' + ic('play') + (done ? 'Continue' : 'Start') + '</button></div>' : '') + '</div>';
   }
   return row('cb', cb) + row('rq', rq);
 }
@@ -2051,13 +2074,13 @@ function taskList(d, label, list, kind){
 function dayBody(d, open){
   return '<p class="hint" style="margin:0">' + esc(d.focus) + '</p>' +
     taskList(d, 'Daily habits', d.habits, 'habit') + taskList(d, 'Learn', d.learn, 'learn') +
-    '<div class="pb-rev"><span class="mini-label">Practise out loud, then grade yourself</span><div class="today-blocks" style="margin-top:6px">' + practiceBlock(d, open) + '</div></div>' +
+    '<div class="pb-rev"><span class="mini-label">Practise out loud. Grade the casebook cases; real questions are optional</span><div class="today-blocks" style="margin-top:6px">' + practiceBlock(d, open) + '</div></div>' +
     taskList(d, 'Produce', d.output, 'produce') + (d.tip ? '<div class="banner" style="margin:12px 0 0">' + ic('info') + '<div>' + esc(d.tip) + '</div></div>' : '');
 }
 function planStart(set, dn){
   var d = DAYS[dn - 1]; if (!d) return;
   var ids = dayPractice(d).filter(function(q){ return q.set === set; }).map(function(q){ return q.id; });
-  var left = ids.filter(function(id){ return !lastGrade(id); });
+  var left = ids.filter(function(id){ return !isDone(ALLQ[id]); });
   resetFiltersState(set); var st = ui(set);
   st.plan = {ids:ids, label:'Day ' + dn + ' practice'}; st.sort = 'default'; st.mode = 'focus'; st.shown = 20;
   var list = filtered(set); st.idx = 0; if (left.length) for (var i = 0; i < list.length; i++) if (list[i].id === left[0]) { st.idx = i; break; }
@@ -2065,8 +2088,8 @@ function planStart(set, dn){
 }
 function planChip(set){
   var st = ui(set); if (!st.plan || !st.plan.ids) return '';
-  var qs = st.plan.ids.map(function(id){ return ALLQ[id]; }).filter(Boolean), done = qs.filter(function(q){ return lastGrade(q.id); }).length;
-  return '<div class="planbar" id="planchip">' + ic('cal') + '<span><b>' + esc(st.plan.label) + '</b> ' + done + ' of ' + qs.length + ' graded</span><button class="btn sm" data-act="plan-clear" data-set="' + set + '">Show all</button></div>';
+  var qs = st.plan.ids.map(function(id){ return ALLQ[id]; }).filter(Boolean), done = qs.filter(isDone).length;
+  return '<div class="planbar" id="planchip">' + ic('cal') + '<span><b>' + esc(st.plan.label) + '</b> ' + done + ' of ' + qs.length + (set === 'rq' ? ' practised (optional)' : ' graded') + '</span><button class="btn sm" data-act="plan-clear" data-set="' + set + '">Show all</button></div>';
 }
 function renderPlan(){
   var P = planInfo(), openD = ui('plan').open || P.cur, totals = {t:0, d:0};
@@ -2076,7 +2099,7 @@ function renderPlan(){
     '<div class="qa">' + nextDayBtn(P, true) + '</div></div>';
   html += '<section class="panel"><div class="tiles dp-tiles">' +
     tile('Current day', P.cur + ' <span class="muted" style="font-size:16px;font-weight:500">of ' + P.n + '</span>', esc(DAYS[P.cur - 1].title)) +
-    tile('Items left', nfmt(left) + ' <span class="muted" style="font-size:16px;font-weight:500">/ ' + nfmt(totals.t) + '</span>', 'Practice, reading, habits and outputs') +
+    tile('Items left', nfmt(left) + ' <span class="muted" style="font-size:16px;font-weight:500">/ ' + nfmt(totals.t) + '</span>', 'Cases, reading, habits and outputs. Real questions are extra') +
     tile('Pace needed', Math.ceil(left / daysLeft) + ' a day', 'To finish on time from here') +
     tile('Left in earlier days', behind, behind ? 'Open those days below' : 'Earlier days are all done') + '</div>' + dayPicker(P) + '</section>';
   html += '<section class="panel" style="margin-top:16px"><h2>How your resources fit</h2><div class="grid g2">' + RES.map(function(r){ return '<div><b>' + esc(r.name) + '.</b> <span class="muted">' + esc(r.role) + '</span><p class="hint" style="margin-top:4px">' + esc(r.how) + '</p></div>'; }).join('') + '</div></section>';
@@ -2095,15 +2118,15 @@ function renderPlan(){
 /* ------------------------------------------------------------ companies */
 function coItems(co){ return QLIST.filter(function(q){ return q.co === co; }).sort(function(a, b){ return (a.set === b.set ? 0 : a.set === 'rq' ? -1 : 1) || ((a.badge === 'P') - (b.badge === 'P')) || a.order - b.order; }); }
 function renderCo(){
-  var st = ui('co'), co = st.which, f = FOCUS[co], items = coItems(co), s = setStats(items);
+  var st = ui('co'), co = st.which, f = FOCUS[co], items = coItems(co), rqs = items.filter(function(q){ return q.set === 'rq'; }), cbs = items.filter(function(q){ return q.set === 'cb'; }), s = setStats(cbs), dn = items.filter(isDone).length;
   function list(a){ return '<ul style="margin:6px 0 0;padding-left:1.2em">' + a.map(function(x){ return '<li style="margin-bottom:5px">' + esc(x) + '</li>'; }).join('') + '</ul>'; }
-  var html = '<div class="page-head"><div><h1>Juspay &amp; Swiggy</h1><p class="sub">Only what has been reported for PM and APM roles at these two companies, plus prep that follows from it. Grades here count everywhere else too.</p></div>' +
+  var html = '<div class="page-head"><div><h1>Juspay &amp; Swiggy</h1><p class="sub">Only what has been reported for PM and APM roles at these two companies, plus prep that follows from it. Real questions are optional practice; casebook cases are graded as usual.</p></div>' +
     '<div class="qa"><div class="seg-ctl" role="group" aria-label="Company">' + ['Juspay', 'Swiggy'].map(function(c){ return '<button data-act="co-open" data-v="' + c + '" aria-pressed="' + (co === c) + '">' + c + '</button>'; }).join('') + '</div>' +
     '<button class="btn primary" data-act="mode" data-set="co" data-v="focus">' + ic('play') + 'Practise ' + co + ' questions</button></div></div>';
-  html += '<div class="grid g-hero"><section class="panel hero"><div class="h-label">' + esc(co) + ' readiness</div><div class="h-val">' + pct(s.readiness) + '</div><div class="h-sub">' + s.answered + ' of ' + s.total + ' attempted, average ' + (s.answered ? pct(s.avg) : 'n/a') + '. Includes casebook cases the books say ' + esc(co) + ' asked.</div></section>' +
+  html += '<div class="grid g-hero"><section class="panel hero"><div class="h-label">' + esc(co) + ' practised</div><div class="h-val">' + dn + '<span class="muted" style="font-size:24px;font-weight:500"> / ' + items.length + '</span></div><div class="h-sub">' + rqs.filter(isDone).length + ' of ' + rqs.length + ' real questions practised (optional, not graded).' + (cbs.length ? ' ' + s.answered + ' of ' + cbs.length + ' casebook cases the books say ' + esc(co) + ' asked are graded' + (s.answered ? ', average ' + pct(s.avg) : '') + '.' : '') + '</div></section>' +
     '<section class="panel"><h2>Interview process reported</h2>' + list(f.process) + '</section></div>';
   html += '<div class="grid g2" style="margin-top:16px"><section class="panel"><h2>What they test</h2>' + list(f.tests) + '</section><section class="panel"><h2>Prep checklist</h2>' + list(f.prep) + '</section></div>';
-  html += '<h2 style="margin-top:22px">Questions and cases</h2>' + legend() + stackBar(s.counts, co) + '<div id="results" style="margin-top:6px"></div>';
+  html += '<h2 style="margin-top:22px">Questions and cases</h2><div id="results" style="margin-top:6px"></div>';
   html += '<section class="panel" style="margin-top:18px"><h2>Sources</h2><div class="sources">' + f.srcs.map(function(k){ return SRC[k] ? '<a href="' + esc(SRC[k][1]) + '" target="_blank" rel="noopener">' + esc(SRC[k][0]) + '</a>' : ''; }).join(' · ') + '</div><p class="hint">' + (co === 'Juspay' ? 'Juspay has much less public PM interview data than Swiggy, and its process has varied across years and roles. Practice questions are marked as such.' : 'Several Swiggy items come from prep guides rather than candidates; they are marked Guide.') + '</p></section>';
   $('#view').innerHTML = html; renderCoResults();
 }
@@ -2156,7 +2179,7 @@ function renderConcepts(){
 
 /* ------------------------------------------------------------ dashboard */
 function greeting(){ var h = new Date().getHours(), n = (S.profile.name || '').trim(); return (h < 5 ? 'Late night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening') + (n ? ', ' + n : ''); }
-function timeSpent(){ var sec = 0, n = 0; for (var id in S.q) S.q[id].attempts.forEach(function(a){ if (a.secs) { sec += a.secs; n++; } }); return {sec:sec, n:n}; }
+function timeSpent(){ var sec = 0, n = 0; for (var id in S.q) if (isCase(id)) S.q[id].attempts.forEach(function(a){ if (a.secs) { sec += a.secs; n++; } }); return {sec:sec, n:n}; }
 function xpByDay(){ var m = {}; (S.xpLog || []).forEach(function(x){ var k = dateKey(new Date(x.at)); m[k] = (m[k] || 0) + x.n; }); return m; }
 function ladderPanel(){
   var xp = S.profile.xp, li = levelInfo(xp), P = planInfo(), byDay = xpByDay(), tk = todayKey();
@@ -2171,14 +2194,14 @@ function ladderPanel(){
     '<div class="ld-sub">' + (li.next ? '<b>' + nfmt(toNext) + ' XP</b> to ' + esc(li.nextName) + ' · about ' + Math.max(1, Math.ceil(toNext / 20)) + ' interview-ready cases' : 'You made CPO.') + '</div></div>' +
     '<div class="ld-stats"><div><b>+' + nfmt(todayXp) + '</b><span>XP today</span></div><div><b>' + nfmt(best) + '</b><span>best day</span></div><div><b>' + esc(LVL_SHORT[proj.i]) + '</b><span>by Day ' + P.n + ' at this pace</span></div></div></div>' +
     '<div class="ld-track"><div class="ld-line"><span style="width:' + youX.toFixed(2) + '%"></span></div>' + nodes + '<div class="ld-you" style="--x:' + youX.toFixed(2) + '" title="You are here"></div></div>' +
-    '<div class="ld-foot">Questions: +10 ready · +7 solid · +4 shaky · +2 lost · +3 skipped. Cases earn double. +30 per mock logged · +8 outputs · +5 reading · +4 daily habits · +6 concept revised · +50 for clearing a day.</div></section>';
+    '<div class="ld-foot">Casebook cases: +20 ready · +14 solid · +8 shaky · +4 lost · +3 skipped. Real questions are optional and earn no XP. +30 per mock logged · +8 outputs · +5 reading · +4 daily habits · +6 concept revised · +50 for clearing a day.</div></section>';
 }
 function paceView(){
   var P = planInfo(), agg = {}, tk = todayKey();
-  for (var id in S.q) S.q[id].attempts.forEach(function(a, i){ var k = dateKey(new Date(a.at)), d = agg[k] || (agg[k] = {N:0,U:0,P:0,M:0,X:0,rev:0,n:0}); d.n++; if (i === 0) d[a.g]++; else d.rev++; });
+  for (var id in S.q) if (isCase(id)) S.q[id].attempts.forEach(function(a, i){ var k = dateKey(new Date(a.at)), d = agg[k] || (agg[k] = {N:0,U:0,P:0,M:0,X:0,rev:0,n:0}); d.n++; if (i === 0) d[a.g]++; else d.rev++; });
   var today = new Date(); today.setHours(0, 0, 0, 0);
   var start = P.start || addDays(today, -(P.cur - 1)), end = addDays(start, P.n - 1);
-  var left = QLIST.length - setStats(QLIST).answered, daysLeft = Math.max(1, Math.round((end - today) / 864e5) + 1), need = Math.ceil(left / daysLeft);
+  var left = CASEQ.length - setStats(CASEQ).answered, daysLeft = Math.max(1, Math.round((end - today) / 864e5) + 1), need = Math.ceil(left / daysLeft);
   var mx = Math.max(5, need * 1.25); Object.keys(agg).forEach(function(k){ if (agg[k].n > mx) mx = agg[k].n; });
   var cols = '';
   for (var i = 0; i < P.n; i++){
@@ -2188,13 +2211,13 @@ function paceView(){
     cols += '<div class="dc' + (fut ? ' fut' : '') + (k === tk ? ' today' : '') + '" data-tip="' + esc(tip) + '"><div class="dc-bar">' + segs + '</div><span class="dc-x">' + (k === tk ? 'Today' : 'D' + (i + 1)) + '</span></div>';
   }
   var tD = agg[tk] || {n:0, rev:0};
-  return '<div class="tiles dp-tiles">' + tile('Not yet tried', nfmt(left) + ' <span class="muted" style="font-size:16px;font-weight:500">/ ' + nfmt(QLIST.length) + '</span>', 'Questions and cases') + tile('Needed per day', need, 'New items a day to try everything by Day ' + P.n) + tile('Graded today', tD.n, tD.rev + ' of them reviews') + tile('Streak', streak() + ' days', 'At least one graded item or ticked task') + '</div>' +
+  return '<div class="tiles dp-tiles">' + tile('Not yet tried', nfmt(left) + ' <span class="muted" style="font-size:16px;font-weight:500">/ ' + nfmt(CASEQ.length) + '</span>', 'Casebook cases') + tile('Needed per day', need, 'New cases a day to try every one by Day ' + P.n) + tile('Graded today', tD.n, tD.rev + ' of them reviews') + tile('Streak', streak() + ' days', 'At least one graded item or ticked task') + '</div>' +
     '<div class="legend" style="margin-top:14px">' + GORDER.map(function(g){ return '<span><span class="sw s-' + g + '"></span>New, ' + GRADES[g].short.toLowerCase() + '</span>'; }).join('') + '<span><span class="sw s-R"></span>Reviews</span><span><span class="sw dp-sw"></span>Pace needed</span></div>' +
     '<div class="dp-wrap"><div class="dp" role="img" aria-label="Items graded per plan day">' + cols + (need > 0 ? '<div class="dp-line" style="--v:' + need + ';--max:' + mx.toFixed(2) + '"><em>' + need + ' new a day</em></div>' : '') + '</div></div>';
 }
 function weakSpots(){
   var rows = [];
-  ['rq','cb'].forEach(function(set){ groupsOf(set).forEach(function(gp){ var s = setStats(gp.qs); if (s.answered) rows.push({name:gp.name, set:set, s:s}); }); });
+  ['cb'].forEach(function(set){ groupsOf(set).forEach(function(gp){ var s = setStats(gp.qs); if (s.answered) rows.push({name:gp.name, set:set, s:s}); }); });
   rows.sort(function(a, b){ return a.s.avg - b.s.avg || b.s.answered - a.s.answered; });
   if (!rows.length) return '<p class="hint" style="margin:0">Grade a few questions and your weakest case types show up here, lowest average first.</p>';
   return rows.slice(0, 6).map(function(r){ return '<div class="weak"><span>' + esc(r.name) + ' <span class="muted" style="font-size:12px">' + SETS[r.set].label + '</span></span><span class="meter" data-tip="' + esc(r.name + ': average ' + pct(r.s.avg)) + '"><span style="width:' + Math.max(2, r.s.avg * 100) + '%"></span></span><span class="w-n">' + pct(r.s.avg) + '</span></div>'; }).join('') + '<p class="hint">Bring the top one to your next mentor mock.</p>';
@@ -2206,11 +2229,13 @@ function recentMisses(){
 }
 function coveragePanel(){
   var rows = [];
-  TYPES.forEach(function(t){ var qs = QLIST.filter(function(q){ return q.set === 'rq' && q.type === t.id; }); if (qs.length) rows.push({name:t.name, lab:'Real', s:setStats(qs)}); });
   Object.keys(SEGS).forEach(function(k){ var qs = QLIST.filter(function(q){ return q.set === 'cb' && q.type === k; }); if (qs.length) rows.push({name:SEGS[k], lab:'Casebook', s:setStats(qs)}); });
   return '<div class="covgrid">' + rows.map(function(r){ return '<div class="covrow"><span class="cv-n">' + esc(r.name) + ' <small>' + r.lab + '</small></span>' + stackBar(r.s.counts, r.name) + '<span class="cv-c">' + r.s.answered + '/' + r.s.total + '</span></div>'; }).join('') + '</div>' + legend();
 }
 function setCard(set){
+  if (set === 'rq') { var rqs = setQs('rq'), pr = rqs.filter(isDone).length;
+    return '<section class="panel setcard"><h2>' + ic('bolt') + 'Real questions <span class="muted" style="font-weight:500;font-size:13px">optional</span></h2><div class="meter" style="margin-top:14px"><span style="width:' + (pr / rqs.length * 100).toFixed(1) + '%"></span></div>' +
+      '<div class="meta"><span>' + pr + ' of ' + rqs.length + ' practised</span><span>Not graded, not in daily targets</span></div><div style="margin-top:12px"><a class="btn sm" href="#rq">Open ' + ic('right') + '</a></div></section>'; }
   var D = SETS[set], st = setStats(setQs(set));
   return '<section class="panel setcard"><h2>' + ic(D.icon) + esc(D.title) + '</h2>' + legend() + stackBar(st.counts, D.title) +
     '<div class="meta"><span>' + st.answered + ' of ' + st.total + ' answered' + (st.answered ? ', average ' + pct(st.avg) : '') + '</span><span>' + st.due + ' due, ' + st.flagged + ' flagged</span></div>' +
@@ -2218,8 +2243,8 @@ function setCard(set){
 }
 function badgesHtml(){ return '<div class="badges">' + BADGES.map(function(b){ var on = !!S.badges[b.id]; return '<div class="badge' + (on ? ' on' : '') + '"><span class="bi">' + ic('trophy') + '</span><span><div class="bn">' + esc(b.n) + '</div><div class="bd">' + esc(on ? 'Earned ' + fmtDate(S.badges[b.id]) : b.d) + '</div></span></div>'; }).join('') + '</div>'; }
 function renderHome(){
-  var all = setStats(QLIST), stk = streak(), P = planInfo(), T = planToday(), d = DAYS[P.cur - 1], behind = behindCount(P);
-  var ts = timeSpent(), earned = BADGES.filter(function(b){ return S.badges[b.id]; }).length, js = setStats(coItems('Juspay')), sw = setStats(coItems('Swiggy'));
+  var all = setStats(CASEQ), stk = streak(), P = planInfo(), T = planToday(), d = DAYS[P.cur - 1], behind = behindCount(P);
+  var ts = timeSpent(), earned = BADGES.filter(function(b){ return S.badges[b.id]; }).length, rqAll = setQs('rq'), rqDone = rqAll.filter(isDone).length;
   var html = '<div class="page-head"><div><h1>' + esc(greeting()) + '</h1><p class="sub">' + (stk ? stk + '-day streak. ' : '') + 'Day ' + P.cur + ' of ' + P.n + ': ' + esc(d.title) + '.</p></div>' +
     '<div class="qa"><button class="btn primary" data-act="plan-start" data-set="cb" data-d="' + P.cur + '">' + ic('play') + 'Continue Day ' + P.cur + ' cases</button>' + nextDayBtn(P) + '<a class="btn" href="#plan">' + ic('cal') + 'Full plan</a></div></div>';
   html += ladderPanel();
@@ -2230,9 +2255,9 @@ function renderHome(){
       '<div class="t-ring">' + ring(T.total ? T.done / T.total : 0, T.done + '/' + T.total) + '</div></div>' + dayPicker(P) + dayBody(d, true) +
       '<div class="qa" style="margin-top:14px"><button class="btn sm" data-act="quick" data-v="rv">' + ic('review') + 'Review due (' + all.due + ')</button><a class="btn sm" href="#mistakes">' + ic('flag') + 'Mistakes sheet (' + mistakeItems().length + ')</a><button class="btn sm" data-act="quick" data-v="rand">' + ic('shuffle') + 'Random casebook case</button><a class="btn sm" href="#co">' + ic('target') + 'Juspay &amp; Swiggy</a>' + nextDayBtn(P) + '</div></section>';
   }
-  html += '<div class="grid g-hero" style="margin-top:16px"><section class="panel hero"><div class="h-label">Readiness</div><div class="h-val">' + pct(all.readiness) + '</div><div class="h-sub">Weighted across all ' + nfmt(all.total) + ' questions and cases: interview-ready 1, solid 0.75, shaky 0.4, lost 0. Skipped are left out. Juspay ' + pct(js.readiness) + ', Swiggy ' + pct(sw.readiness) + '.</div></section>' +
+  html += '<div class="grid g-hero" style="margin-top:16px"><section class="panel hero"><div class="h-label">Readiness</div><div class="h-val">' + pct(all.readiness) + '</div><div class="h-sub">Weighted across all ' + nfmt(all.total) + ' casebook cases: interview-ready 1, solid 0.75, shaky 0.4, lost 0. Skipped are left out. Real questions are optional and not graded: ' + rqDone + ' of ' + rqAll.length + ' practised.</div></section>' +
     '<section class="panel"><div class="tiles">' +
-      tile('Answered', nfmt(all.answered) + ' <span class="muted" style="font-size:16px;font-weight:500">/ ' + nfmt(all.total) + '</span>', pct(all.total ? all.answered / all.total : 0) + ' covered') +
+      tile('Cases graded', nfmt(all.answered) + ' <span class="muted" style="font-size:16px;font-weight:500">/ ' + nfmt(all.total) + '</span>', pct(all.total ? all.answered / all.total : 0) + ' covered') +
       tile('Average score', all.scored ? pct(all.avg) : 'n/a', 'On graded answers') +
       tile('Due for review', all.due, '<a href="#review">Open the queue</a>') +
       tile('Time on questions', ts.sec ? fmtSecs(ts.sec) : 'n/a', ts.n ? 'Across ' + ts.n + ' timed answers' : 'Use focus mode to track it') +
@@ -2247,7 +2272,7 @@ function renderHome(){
 
 /* ------------------------------------------------------------ data */
 function renderData(){
-  var p = S.profile, all = setStats(QLIST), nAtt = totalAttempts(), notes = 0; for (var id in S.q) if (S.q[id].note) notes++;
+  var p = S.profile, all = setStats(CASEQ), nAtt = totalAttempts(), notes = 0; for (var id in S.q) if (S.q[id].note) notes++;
   var html = '<div class="page-head"><div><h1>Export and settings</h1><p class="sub">Your progress saves to this tracker\'s storage on claude.ai, so it survives page updates, clearing this browser and switching devices where you are signed in. This browser keeps a copy too.</p></div></div>';
   html += '<section class="panel"><h2>Export your progress</h2><p style="margin:0 0 12px">Saves one .json file with every attempt, grade, think time, note, flag and miss tag, plus your plan and revision progress. Upload it in a chat with Claude to get feedback on your weak spots.</p>' +
     '<div class="qa"><button class="btn primary" data-act="export">' + ic('down') + 'Export progress (.json)</button><button class="btn" data-act="copy-export">Copy it instead</button></div>' +
@@ -2278,16 +2303,17 @@ function settingChange(t){
 function buildExport(){
   var qs = [];
   QLIST.forEach(function(q){
-    var e = S.q[q.id]; if (!e || !(e.attempts.length || e.note || e.flagged || (e.tags && e.tags.length))) return;
+    var e = S.q[q.id]; if (!e || !((q.set === 'cb' && e.attempts.length) || e.practised || e.note || e.flagged || (e.tags && e.tags.length))) return;
     var g = lastGrade(q.id), dd = dueDate(q.id);
     qs.push({id:q.id, set:SETS[q.set].label, type:SETS[q.set].groupName(q), company:q.co || null, casebook:q.book ? BOOKS[q.book].short + ' p.' + q.page : null, question:q.name ? q.name + ': ' + q.q : q.q,
-      lastGrade:g ? GRADES[g].label : null, attempts:e.attempts.map(function(a){ return {at:a.at, grade:GRADES[a.g].label, thinkSecs:a.secs == null ? null : a.secs}; }),
+      practised:q.set === 'rq' ? (e.practised || null) : undefined,
+      lastGrade:g ? GRADES[g].label : null, attempts:(q.set === 'cb' ? e.attempts : []).map(function(a){ return {at:a.at, grade:GRADES[a.g].label, thinkSecs:a.secs == null ? null : a.secs}; }),
       missTags:e.tags || [], note:e.note || '', flagged:!!e.flagged, nextReview:dd ? dateKey(dd) : null});
   });
   function summ(x){ var s = setStats(x); return {total:s.total, answered:s.answered, averageScore:+s.avg.toFixed(3), readiness:+s.readiness.toFixed(3)}; }
   return {app:'productprep-desk', schema:1, exportedAt:new Date().toISOString(),
     profile:{xp:S.profile.xp, level:levelInfo(S.profile.xp).name, streakDays:streak(), planDay:planInfo().cur, planStart:S.profile.planStart || null, badges:Object.keys(S.badges)},
-    summary:{realQuestions:summ(setQs('rq')), casebook:summ(setQs('cb')), juspay:summ(coItems('Juspay')), swiggy:summ(coItems('Swiggy'))},
+    summary:{realQuestions:{total:setQs('rq').length, practised:setQs('rq').filter(isDone).length, graded:false}, casebook:summ(CASEQ), swiggyCases:summ(coItems('Swiggy').filter(function(q){ return q.set === 'cb'; }))},
     items:qs, tasksDone:S.tasks, revision:S.rev, activity:S.activity, _state:S};
 }
 function exportText(){ return JSON.stringify(buildExport(), null, 1); }
@@ -2320,6 +2346,7 @@ function mergeState(inc){
     (src.attempts || []).forEach(function(a){ if (!seen[a.at + a.g]) { cur.attempts.push(a); n++; } });
     cur.attempts.sort(function(a, b){ return a.at < b.at ? -1 : a.at > b.at ? 1 : 0; });
     if ((src.noteAt || '') > (cur.noteAt || '')) { cur.note = src.note; cur.noteAt = src.noteAt; }
+    if (src.practised && !cur.practised) cur.practised = src.practised;
     cur.flagged = cur.flagged || !!src.flagged; cur.tags = uniq((cur.tags || []).concat(src.tags || []));
   });
   ['tasks','taskXp','badges'].forEach(function(k){ Object.keys(inc[k] || {}).forEach(function(x){ if (!S[k][x]) S[k][x] = inc[k][x]; }); });
@@ -2361,6 +2388,7 @@ document.addEventListener('click', function(e){
     case 'reveal': toggleReveal(id); break;
     case 'grade': grade(id, el.getAttribute('data-g')); break;
     case 'flag': toggleFlag(id); break;
+    case 'practised': togglePractised(id); break;
     case 'tag': toggleTag(id, el.getAttribute('data-tag')); el.classList.toggle('on'); el.setAttribute('aria-pressed', el.classList.contains('on')); break;
     case 'timer': toggleTimer(id); break;
     case 'mode': setMode(set, v); break;
@@ -2415,7 +2443,7 @@ document.addEventListener('keydown', function(e){
   else if (e.key === 'f' || e.key === 'F') toggleFlag(id);
   else if (e.key === 't' || e.key === 'T') toggleTimer(id);
   else if (e.key === 'n' || e.key === 'N') { var ta = $('#card-' + id + ' textarea'); if (ta) { e.preventDefault(); ta.focus(); } }
-  else if (session.revealed[id]) { var map = {'4':'N','3':'U','2':'P','1':'M','0':'X'}; if (map[e.key]) grade(id, map[e.key]); }
+  else if (session.revealed[id] && isCase(id)) { var map = {'4':'N','3':'U','2':'P','1':'M','0':'X'}; if (map[e.key]) grade(id, map[e.key]); }
 });
 
 route();
