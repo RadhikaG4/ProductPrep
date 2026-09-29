@@ -1599,7 +1599,9 @@ function toggleTask(id, kind, on){
   } else delete S.tasks[id];
   save(); checkBadges(); refreshChrome();
 }
-function pdfHref(book, page){ return BOOKS[book].file + '#page=' + page; }
+// claude.ai blocks artifact files from opening in their own tab, so the PDFs are served from GitHub Pages there
+var PDF_BASE = /github\.io$|^localhost$|^127\./.test(location.hostname) ? '' : 'https://radhikag4.github.io/ProductPrep/';
+function pdfHref(book, page){ return PDF_BASE + BOOKS[book].file + '#page=' + page; }
 
 /* ------------------------------------------------------------ chrome */
 function renderTopbar(){
